@@ -1,5 +1,6 @@
 import type { AttendanceRecord, UserSession, LocationCode } from '../types/attendance';
 import { AttendanceService } from './attendanceStore';
+import { validateAuth } from '../config/auth';
 
 /**
  * Endpoints API Service Abstraction
@@ -12,7 +13,16 @@ export class AppApi {
     role: 'SUPERUSER' | 'LOCATION_ADMIN';
     assignedLocation?: LocationCode | 'ALL';
     name?: string;
-  }): Promise<{ success: boolean; session: UserSession; token: string }> {
+  }): Promise<{ success: boolean; session?: UserSession; token?: string; error?: string }> {
+    // Validasi whitelist email
+    const authCheck = validateAuth(credentials.email, credentials.role);
+    if (!authCheck.authorized) {
+      return {
+        success: false,
+        error: authCheck.reason || 'Unauthorized',
+      };
+    }
+
     // Simulated auth logic
     const session: UserSession = {
       role: credentials.role,

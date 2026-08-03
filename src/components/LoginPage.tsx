@@ -14,6 +14,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const [email, setEmail] = useState('admin.pusat@sulutgo.co.id');
   const [name, setName] = useState('Administrator Utama');
   const [isSimulatingGoogle, setIsSimulatingGoogle] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   const handleRoleChange = (newRole: 'SUPERUSER' | 'LOCATION_ADMIN') => {
     setRole(newRole);
@@ -63,8 +64,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 name: userInfo.name,
               });
 
-              if (res.success) {
+              if (res.success && res.session) {
                 onLogin(res.session);
+              } else {
+                setErrorMessage(res.error || 'Login gagal');
+                setIsSimulatingGoogle(false);
               }
             } catch (err) {
               console.error('Failed to fetch Google User Info', err);
@@ -90,8 +94,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           assignedLocation: role === 'LOCATION_ADMIN' ? selectedLocation : 'ALL',
           name,
         });
-        if (res.success) {
+        if (res.success && res.session) {
           onLogin(res.session);
+        } else {
+          setErrorMessage(res.error || 'Login gagal');
+          setIsSimulatingGoogle(false);
         }
       }, 800);
     }
@@ -208,6 +215,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 <div className="text-xs font-bold text-slate-900">{name}</div>
                 <div className="text-[11px] text-slate-500">{email}</div>
               </div>
+
+              {/* Error Message */}
+              {errorMessage && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg">
+                  <p className="text-xs text-rose-700 font-medium">{errorMessage}</p>
+                </div>
+              )}
 
               {/* Google Button */}
               <button
