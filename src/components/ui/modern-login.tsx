@@ -4,6 +4,7 @@ import type { UserSession, LocationCode } from '../../types/attendance';
 import { LOCATION_NAMES } from '../../types/attendance';
 import { AppApi } from '../../services/api';
 import logoImg from '../../assets/logo.jpeg';
+import { UnauthorizedModal } from '../UnauthorizedModal';
 
 interface ModernLoginProps {
   onLogin: (session: UserSession) => void;
@@ -15,6 +16,8 @@ export const ModernLogin: React.FC<ModernLoginProps> = ({ onLogin }) => {
   const [email, setEmail] = useState('admin.pusat@sulutgo.co.id');
   const [name, setName] = useState('Administrator Utama');
   const [isSimulatingGoogle, setIsSimulatingGoogle] = useState(false);
+  const [showUnauthorizedModal, setShowUnauthorizedModal] = useState(false);
+  const [unauthorizedEmail, setUnauthorizedEmail] = useState('');
 
   const handleRoleChange = (newRole: 'SUPERUSER' | 'LOCATION_ADMIN') => {
     setRole(newRole);
@@ -67,6 +70,8 @@ export const ModernLogin: React.FC<ModernLoginProps> = ({ onLogin }) => {
               if (res.success && res.session) {
                 onLogin(res.session);
               } else {
+                setUnauthorizedEmail(userInfo.email);
+                setShowUnauthorizedModal(true);
                 console.error('Login unauthorized:', res.error);
                 setIsSimulatingGoogle(false);
               }
@@ -97,6 +102,8 @@ export const ModernLogin: React.FC<ModernLoginProps> = ({ onLogin }) => {
         if (res.success && res.session) {
           onLogin(res.session);
         } else {
+          setUnauthorizedEmail(email);
+          setShowUnauthorizedModal(true);
           console.error('Login unauthorized:', res.error);
           setIsSimulatingGoogle(false);
         }
@@ -245,6 +252,13 @@ export const ModernLogin: React.FC<ModernLoginProps> = ({ onLogin }) => {
           <p className="text-slate-400">Manado • Gorontalo • Palu • Papua • dan lainnya</p>
         </div>
       </div>
+
+      {/* Unauthorized Modal */}
+      <UnauthorizedModal
+        isOpen={showUnauthorizedModal}
+        onClose={() => setShowUnauthorizedModal(false)}
+        email={unauthorizedEmail}
+      />
     </div>
   );
 };
