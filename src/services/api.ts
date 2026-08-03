@@ -15,7 +15,13 @@ export class AppApi {
     name?: string;
   }): Promise<{ success: boolean; session?: UserSession; token?: string; error?: string }> {
     // Validasi whitelist email
-    const authCheck = validateAuth(credentials.email, credentials.role);
+    const authCheck = validateAuth(
+      credentials.email,
+      credentials.role,
+      credentials.assignedLocation && credentials.assignedLocation !== 'ALL'
+        ? (credentials.assignedLocation as LocationCode)
+        : undefined
+    );
     if (!authCheck.authorized) {
       return {
         success: false,
