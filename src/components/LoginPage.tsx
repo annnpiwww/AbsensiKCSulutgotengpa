@@ -3,6 +3,7 @@ import type { UserSession, LocationCode } from '../types/attendance';
 import { LOCATION_NAMES } from '../types/attendance';
 import { AppApi } from '../services/api';
 import { ShieldCheck, UserCheck, Lock, Building2, CheckCircle2, ArrowRight, ChevronDown } from 'lucide-react';
+import { UnauthorizedModal } from './UnauthorizedModal';
 
 interface LoginPageProps {
   onLogin: (session: UserSession) => void;
@@ -15,6 +16,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const [name, setName] = useState('Administrator Utama');
   const [isSimulatingGoogle, setIsSimulatingGoogle] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [showUnauthorizedModal, setShowUnauthorizedModal] = useState(false);
+  const [unauthorizedEmail, setUnauthorizedEmail] = useState('');
 
   const handleRoleChange = (newRole: 'SUPERUSER' | 'LOCATION_ADMIN') => {
     setRole(newRole);
@@ -67,6 +70,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               if (res.success && res.session) {
                 onLogin(res.session);
               } else {
+                setUnauthorizedEmail(userInfo.email);
+                setShowUnauthorizedModal(true);
                 setErrorMessage(res.error || 'Login gagal');
                 setIsSimulatingGoogle(false);
               }
@@ -97,6 +102,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         if (res.success && res.session) {
           onLogin(res.session);
         } else {
+          setUnauthorizedEmail(email);
+          setShowUnauthorizedModal(true);
           setErrorMessage(res.error || 'Login gagal');
           setIsSimulatingGoogle(false);
         }
@@ -270,6 +277,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           </div>
         </div>
       </div>
+
+      {/* Unauthorized Modal */}
+      <UnauthorizedModal
+        isOpen={showUnauthorizedModal}
+        onClose={() => setShowUnauthorizedModal(false)}
+        email={unauthorizedEmail}
+      />
     </div>
   );
 };
