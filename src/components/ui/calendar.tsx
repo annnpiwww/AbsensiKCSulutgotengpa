@@ -20,11 +20,11 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
         caption_label: 'text-sm font-semibold text-slate-900',
         weekday: 'text-slate-400 font-medium uppercase text-[10px]',
         day: 'hover:bg-blue-50 hover:text-blue-700 rounded-lg',
-        day_selected: '!bg-blue-600 !text-white hover:!bg-blue-700',
-        day_today:
+        selected: '!bg-blue-600 !text-white hover:!bg-blue-700',
+        today:
           '[&:not([data-selected])]:font-bold [&:not([data-selected])]:text-blue-700',
-        day_outside: 'text-slate-300 opacity-60',
-        day_disabled: 'text-slate-300 opacity-40',
+        outside: 'text-slate-300 opacity-60',
+        disabled: 'text-slate-300 opacity-40',
         ...classNames,
       }}
       components={{
