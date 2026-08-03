@@ -64,8 +64,11 @@ export const ModernLogin: React.FC<ModernLoginProps> = ({ onLogin }) => {
                 name: userInfo.name,
               });
 
-              if (res.success) {
+              if (res.success && res.session) {
                 onLogin(res.session);
+              } else {
+                console.error('Login unauthorized:', res.error);
+                setIsSimulatingGoogle(false);
               }
             } catch (err) {
               console.error('Failed to fetch Google User Info', err);
@@ -91,8 +94,11 @@ export const ModernLogin: React.FC<ModernLoginProps> = ({ onLogin }) => {
           assignedLocation: role === 'LOCATION_ADMIN' ? selectedLocation : 'ALL',
           name,
         });
-        if (res.success) {
+        if (res.success && res.session) {
           onLogin(res.session);
+        } else {
+          console.error('Login unauthorized:', res.error);
+          setIsSimulatingGoogle(false);
         }
       }, 800);
     }
