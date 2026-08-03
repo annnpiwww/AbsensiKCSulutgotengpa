@@ -6,8 +6,8 @@ import {
   Clock,
   Building2,
   Award,
-  CheckCircle2,
-  Sparkles,
+  ShieldCheck,
+  BarChart3,
 } from 'lucide-react';
 
 interface LocationAnalyticsPageProps {
@@ -32,7 +32,6 @@ export const LocationAnalyticsPage: React.FC<LocationAnalyticsPageProps> = ({ re
   // Aggregate metrics per branch location
   const branchMetrics = useMemo(() => {
     const map: Record<string, LocationMetric> = {};
-
     (Object.keys(LOCATION_NAMES) as LocationCode[]).forEach((loc) => {
       map[loc] = {
         code: loc,
@@ -48,7 +47,6 @@ export const LocationAnalyticsPage: React.FC<LocationAnalyticsPageProps> = ({ re
         alpaPercentage: 0,
       };
     });
-
     records.forEach((r) => {
       const metric = map[r.location];
       if (metric) {
@@ -60,7 +58,6 @@ export const LocationAnalyticsPage: React.FC<LocationAnalyticsPageProps> = ({ re
         else if (r.status === 'Izin' || r.status === 'Cuti') metric.izin += 1;
       }
     });
-
     return Object.values(map).map((m) => {
       const total = m.totalRecords || 1;
       return {
@@ -90,158 +87,164 @@ export const LocationAnalyticsPage: React.FC<LocationAnalyticsPageProps> = ({ re
       .sort((a, b) => b.alpa - a.alpa || b.alpaPercentage - a.alpaPercentage)[0];
   }, [branchMetrics]);
 
-  const topPerfectAttendance = useMemo(() => {
+  const cleanBranches = useMemo(() => {
     return branchMetrics.filter((b) => b.totalRecords > 0 && b.alpa === 0 && b.terlambat === 0);
   }, [branchMetrics]);
 
+  // Render highlight stat cards
+  const getBarColor = (p: number) => {
+    if (p >= 85) return 'from-emerald-500 to-emerald-600';
+    if (p >= 70) return 'from-blue-500 to-blue-600';
+    if (p >= 50) return 'from-amber-500 to-amber-600';
+    return 'from-rose-500 to-rose-600';
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Header Bento Hero Banner */}
-      <div className="bento-hero p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden min-w-0 max-w-full">
-        <div className="relative z-10 space-y-2">
-          <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-xs text-sky-300 font-medium w-fit">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Executive Analytics Dashboard</span>
+    <div className="space-y-6 min-w-0 max-w-full">
+      {/* Hero Banner */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 p-6 sm:p-8 text-white shadow-xl shadow-blue-500/20">
+        <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-white/10 blur-2xl" />
+        <div className="absolute -bottom-24 -left-10 w-72 h-72 rounded-full bg-sky-400/20 blur-3xl" />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 w-fit px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-xs font-semibold text-sky-100 mb-3">
+              <BarChart3 className="w-3.5 h-3.5" />
+              Analisis 18 Cabang
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Perbandingan Kinerja Cabang</h2>
+            <p className="text-sm text-blue-100 mt-1">
+              Bandingkan tingkat kedisiplinan, keterlambatan, dan alpa setiap unit cabang
+            </p>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">Analisis Kinerja 18 Cabang</h1>
-          <p className="text-xs text-slate-300 max-w-2xl">
-            Pantau tingkat kehadiran, keterlambatan, dan riwayat alpa karyawan di 18 cabang KC SulutGo & Tengpa.
-          </p>
+          <div className="flex items-center gap-3 self-start md:self-auto">
+            <div className="text-center px-4 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/20">
+              <div className="text-xl font-bold leading-tight">{branchMetrics.filter((b) => b.totalRecords > 0).length}</div>
+              <div className="text-[10px] text-blue-100 font-medium uppercase tracking-wider">Cabang Aktif</div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Top Insights Bento Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 min-w-0 max-w-full">
-        {/* Most Disciplined */}
-        <div className="bento-card p-5 border-emerald-200/80 bg-emerald-50/20 relative overflow-hidden min-w-0 max-w-full">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200/60">
-              Cabang Paling Rajin
-            </span>
-            <Award className="w-5 h-5 text-emerald-600" />
+      {/* Highlight Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Top Disciplined */}
+        <div className="relative overflow-hidden bg-white rounded-2xl p-5 shadow-lg shadow-slate-200/60 border border-slate-200/60 hover:shadow-xl transition-all duration-300">
+          <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full bg-emerald-50 blur-2xl" />
+          <div className="flex items-center gap-3 mb-3">
+            <div className={`p-2.5 rounded-xl bg-emerald-100 text-emerald-700 shadow-lg shadow-emerald-500/20`}>
+              <Award className="w-5 h-5" />
+            </div>
+            <h3 className="text-sm font-bold text-slate-900 truncate">Cabang Paling Disiplin</h3>
           </div>
-          <h3 className="text-base font-bold text-slate-900 truncate">
-            {topDisciplined ? topDisciplined.name : '-'}
-          </h3>
-          <div className="text-xs text-emerald-700 font-medium mt-1">
-            Tingkat Kehadiran: <strong className="text-sm font-extrabold">{topDisciplined ? topDisciplined.hadirPercentage : 0}%</strong>
+          <h2 className="text-2xl font-extrabold text-slate-900 truncate mb-1">{topDisciplined ? topDisciplined.name : '-'}</h2>
+          <div className="text-sm text-emerald-600 font-semibold mb-2">
+            Tingkat Kehadiran: <span className="font-extrabold">{topDisciplined ? topDisciplined.hadirPercentage : 0}%</span>
           </div>
-          <div className="text-[11px] text-slate-500 mt-2">
-            Hadir: {topDisciplined?.hadir || 0} | Terlambat: {topDisciplined?.terlambat || 0}
+          <div className="text-[11px] text-slate-500">
+            Hadir: {topDisciplined?.hadir || 0} &nbsp;|&nbsp; Terlambat: {topDisciplined?.terlambat || 0}
           </div>
         </div>
 
-        {/* Most Late */}
-        <div className="bento-card p-5 border-amber-200/80 bg-amber-50/20 relative overflow-hidden min-w-0 max-w-full">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-200/60">
-              Paling Sering Telat
-            </span>
-            <Clock className="w-5 h-5 text-amber-600" />
+        {/* Top Late */}
+        <div className="relative overflow-hidden bg-white rounded-2xl p-5 shadow-lg shadow-slate-200/60 border border-slate-200/60 hover:shadow-xl transition-all duration-300">
+          <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full bg-amber-50 blur-2xl" />
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2.5 rounded-xl bg-amber-100 text-amber-700 shadow-lg shadow-amber-500/20">
+              <Clock className="w-5 h-5" />
+            </div>
+            <h3 className="text-sm font-bold text-slate-900 truncate">Rata Terlambat Terbanyak</h3>
           </div>
-          <h3 className="text-base font-bold text-slate-900 truncate">{topLate ? topLate.name : '-'}</h3>
-          <div className="text-xs text-amber-700 font-medium mt-1">
-            Terlambat: <strong className="text-sm font-extrabold">{topLate ? topLate.terlambat : 0} Log</strong>
+          <h2 className="text-2xl font-extrabold text-slate-900 truncate mb-1">{topLate ? topLate.name : '-'}</h2>
+          <div className="text-sm text-amber-600 font-semibold mb-2">
+            Terlambat: <span className="font-extrabold">{topLate ? topLate.terlambat : 0} Log</span>
           </div>
-          <div className="text-[11px] text-slate-500 mt-2">
+          <div className="text-[11px] text-slate-500">
             Rasio Terlambat: {topLate ? topLate.latePercentage : 0}% dari total log.
           </div>
         </div>
 
-        {/* Most Alpa */}
-        <div className="bento-card p-5 border-rose-200/80 bg-rose-50/20 relative overflow-hidden min-w-0 max-w-full">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 border border-rose-200/60">
-              Alpa Terbanyak
-            </span>
-            <AlertOctagon className="w-5 h-5 text-rose-600" />
+        {/* Top Alpa */}
+        <div className="relative overflow-hidden bg-white rounded-2xl p-5 shadow-lg shadow-slate-200/60 border border-slate-200/60 hover:shadow-xl transition-all duration-300">
+          <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full bg-rose-50 blur-2xl" />
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2.5 rounded-xl bg-rose-100 text-rose-700 shadow-lg shadow-rose-500/20">
+              <AlertOctagon className="w-5 h-5" />
+            </div>
+            <h3 className="text-sm font-bold text-slate-900 truncate">Alpa Terbanyak</h3>
           </div>
-          <h3 className="text-base font-bold text-slate-900 truncate">{topAlpa ? topAlpa.name : '-'}</h3>
-          <div className="text-xs text-rose-700 font-medium mt-1">
-            Total Alpa: <strong className="text-sm font-extrabold">{topAlpa ? topAlpa.alpa : 0} Kejadian</strong>
+          <h2 className="text-2xl font-extrabold text-slate-900 truncate mb-1">{topAlpa ? topAlpa.name : '-'}</h2>
+          <div className="text-sm text-rose-600 font-semibold mb-2">
+            Total Alpa: <span className="font-extrabold">{topAlpa ? topAlpa.alpa : 0} Kejadian</span>
           </div>
-          <div className="text-[11px] text-slate-500 mt-2">
+          <div className="text-[11px] text-slate-500">
             Rasio Alpa: {topAlpa ? topAlpa.alpaPercentage : 0}% dari total log.
           </div>
         </div>
       </div>
 
-      {/* Perfect Attendance Banner */}
-      {topPerfectAttendance.length > 0 && (
-        <div className="p-3.5 rounded-xl bg-blue-50/80 border border-blue-200/70 flex items-center gap-2.5 min-w-0 max-w-full overflow-hidden text-xs text-blue-900">
-          <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0" />
-          <div className="truncate">
-            <strong className="font-semibold">Mantap! Bebas Telat & Alpa:</strong>{' '}
-            {topPerfectAttendance.map((b) => b.name).join(', ')}
-          </div>
-        </div>
-      )}
+      {/* Clean branches info band */}
+      <div className="p-4 rounded-xl bg-gradient-to-r from-blue-50 to-emerald-50 border border-blue-200/60 flex items-center gap-2.5 text-xs text-blue-900">
+        <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+        <span>
+          <strong className="font-bold">{cleanBranches.length}</strong> cabang mencatat <strong className="font-bold">nol absensi bermasalah</strong>
+          {' '}(tanpa alpa &amp; keterlambatan).
+        </span>
+      </div>
 
       {/* 18 Branches Matrix Table */}
-      <div className="bento-card rounded-2xl overflow-hidden min-w-0 max-w-full">
-        <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
+      <div className="bg-white rounded-2xl shadow-lg shadow-slate-200/60 border border-slate-200/60 overflow-hidden">
+        <div className="p-4 sm:p-5 border-b border-blue-100/50 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-blue-600" />
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-900">
-              Matriks Kepatuhan 18 Kantor Cabang
-            </h3>
+            <div className="p-2 rounded-lg bg-blue-50 text-blue-600 border border-blue-100">
+              <Building2 className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-900">Matriks Kinerja 18 Cabang</h3>
+              <p className="text-[11px] text-slate-500">Perbandingan kehadiran per unit cabang</p>
+            </div>
           </div>
         </div>
 
         <div className="overflow-x-auto w-full max-w-full min-w-0">
-          <table className="w-full text-left border-collapse min-w-[680px] text-xs">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-100 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                <th className="py-3 px-4">Nama Kantor Cabang</th>
-                <th className="py-3 px-4 text-center">Total Log</th>
-                <th className="py-3 px-4 text-center">Hadir</th>
-                <th className="py-3 px-4 text-center">Terlambat</th>
-                <th className="py-3 px-4 text-center">Alpa</th>
-                <th className="py-3 px-4 text-center">Sakit</th>
-                <th className="py-3 px-4 text-center">Izin</th>
-                <th className="py-3 px-4">Tingkat Kehadiran</th>
+          <table className="w-full text-left text-xs min-w-[720px]">
+            <thead className="bg-gradient-to-r from-blue-50 to-blue-100/50 border-b border-blue-100/50 text-blue-700 uppercase tracking-wider text-[10px] font-semibold">
+              <tr>
+                <th className="px-4 py-3 w-[60px]">Rank</th>
+                <th className="px-4 py-3">Cabang</th>
+                <th className="px-4 py-3 text-center w-[80px]">Total</th>
+                <th className="px-4 py-3 text-center w-[80px]">Hadir</th>
+                <th className="px-4 py-3 text-center w-[80px]">Terlambat</th>
+                <th className="px-4 py-3 text-center w-[80px]">Alpa</th>
+                <th className="px-4 py-3 w-[180px]">Tingkat Kehadiran</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
-              {branchMetrics.map((b) => (
-                <tr key={b.code} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="py-3 px-4 font-medium text-slate-900 flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
-                    {b.name}
-                  </td>
-                  <td className="py-3 px-4 text-center font-semibold text-slate-800">
-                    {b.totalRecords}
-                  </td>
-                  <td className="py-3 px-4 text-center font-semibold text-emerald-600 bg-emerald-50/30">
-                    {b.hadir}
-                  </td>
-                  <td className="py-3 px-4 text-center font-semibold text-amber-600 bg-amber-50/30">
-                    {b.terlambat}
-                  </td>
-                  <td className="py-3 px-4 text-center font-semibold text-rose-600 bg-rose-50/30">
-                    {b.alpa}
-                  </td>
-                  <td className="py-3 px-4 text-center font-medium text-blue-600">
-                    {b.sakit}
-                  </td>
-                  <td className="py-3 px-4 text-center font-medium text-purple-600">
-                    {b.izin}
+            <tbody className="divide-y divide-blue-50/50">
+              {branchMetrics.map((b, idx) => (
+                <tr key={b.code} className="hover:bg-blue-50/30 transition-colors">
+                  <td className="py-3 px-4">
+                    <span className={`inline-flex items-center justify-center w-6 h-6 rounded-lg text-[11px] font-bold ${
+                      idx === 0 ? 'bg-amber-100 text-amber-700' : idx === 1 ? 'bg-slate-100 text-slate-600' : idx === 2 ? 'bg-orange-100 text-orange-700' : 'bg-blue-50/50 text-slate-500'
+                    }`}>
+                      {idx + 1}
+                    </span>
                   </td>
                   <td className="py-3 px-4">
+                    <div className="font-semibold text-slate-900 text-xs truncate max-w-[220px]">{b.name}</div>
+                    <div className="text-[11px] text-slate-400 font-mono">{b.code}</div>
+                  </td>
+                  <td className="py-3 px-4 text-center font-bold text-slate-900 tabular-nums">{b.totalRecords || '-'}</td>
+                  <td className="py-3 px-4 text-center text-emerald-600 font-semibold tabular-nums">{b.hadir}</td>
+                  <td className="py-3 px-4 text-center text-amber-600 font-semibold tabular-nums">{b.terlambat}</td>
+                  <td className="py-3 px-4 text-center text-rose-600 font-semibold tabular-nums">{b.alpa}</td>
+                  <td className="py-3 px-4">
                     <div className="flex items-center gap-2">
-                      <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                      <div className="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden">
                         <div
-                          className={`h-full rounded-full ${
-                            b.hadirPercentage >= 85
-                              ? 'bg-emerald-500'
-                              : b.hadirPercentage >= 70
-                              ? 'bg-amber-500'
-                              : 'bg-rose-500'
-                          }`}
+                          className={`h-full rounded-full bg-gradient-to-r ${getBarColor(b.hadirPercentage)} transition-all duration-500`}
                           style={{ width: `${b.hadirPercentage}%` }}
                         />
                       </div>
-                      <span className="text-[11px] font-semibold text-slate-700 w-9 text-right">
+                      <span className="text-[11px] font-semibold text-slate-700 w-9 text-right tabular-nums">
                         {b.hadirPercentage}%
                       </span>
                     </div>

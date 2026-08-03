@@ -111,8 +111,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 <ShieldCheck className="w-6 h-6 text-sky-400" />
               </div>
               <div>
-                <h1 className="text-base font-bold tracking-tight text-white">Pantau Absensi</h1>
-                <p className="text-[11px] text-slate-300">KC SulutGo & Tengpa</p>
+                <h1 className="text-base font-bold tracking-tight text-white">Monitoring Absensi</h1>
+                <p className="text-[11px] text-slate-300">KC Sulutgotengpa</p>
               </div>
             </div>
 

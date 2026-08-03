@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Building, Calendar, User, FileText, ChevronDown } from 'lucide-react';
+import { X, Building, User, FileText, ChevronDown } from 'lucide-react';
+import { DateField } from './ui/date-field';
 import type {
   AttendanceRecord,
   AttendanceStatus,
@@ -156,16 +157,11 @@ export const AddAttendanceModal: React.FC<AddAttendanceModalProps> = ({
 
             <div>
               <label className="block text-slate-600 font-medium mb-1 text-[11px]">Tanggal Presensi</label>
-              <div className="relative">
-                <Calendar className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="date"
-                  required
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="input-modern w-full pl-8 text-xs font-medium cursor-pointer"
-                />
-              </div>
+              <DateField
+                value={date}
+                onChange={setDate}
+                placeholder="Pilih tanggal"
+              />
             </div>
           </div>
 

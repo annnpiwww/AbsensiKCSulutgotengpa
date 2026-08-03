@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { LoginPage } from './components/LoginPage';
+import { ModernLogin } from './components/ui/modern-login';
 import { Sidebar, PageView } from './components/Sidebar';
 import { DateRangePicker, DateFilterPreset } from './components/DateRangePicker';
 import { LocationSelector } from './components/LocationSelector';
@@ -262,9 +262,9 @@ export function App() {
     }
   };
 
-  // If not logged in, render LoginPage
+  // If not logged in, render ModernLogin
   if (!session || window.location.pathname === '/login') {
-    return <LoginPage onLogin={handleLogin} />;
+    return <ModernLogin onLogin={handleLogin} />;
   }
 
   return (
@@ -287,29 +287,29 @@ export function App() {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 md:ml-64 min-h-screen flex flex-col min-w-0 max-w-full overflow-x-hidden">
+      <div className="flex-1 md:ml-64 min-h-screen flex flex-col min-w-0 max-w-full overflow-x-hidden bg-gradient-to-br from-blue-50/30 via-white to-blue-50/20">
         {/* Top Header Bar */}
-        <header className="sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-6 py-3 flex items-center justify-between shadow-2xs w-full max-w-full">
+        <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-xl border-b border-blue-100/60 px-4 sm:px-6 py-4 flex items-center justify-between shadow-sm w-full max-w-full">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsOpenMobile(true)}
-              className="md:hidden p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+              className="md:hidden p-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 transition-all"
             >
               <Menu className="w-5 h-5" />
             </button>
 
             <div>
-              <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-400">
+              <div className="flex items-center gap-1.5 text-[11px] font-medium text-blue-400">
                 <span>Dashboard</span>
                 <span>/</span>
-                <span className="text-slate-700 font-semibold">
+                <span className="text-blue-700 font-semibold">
                   {currentPage === 'dashboard' && 'Beranda'}
                   {currentPage === 'logs' && 'Riwayat Absensi'}
                   {currentPage === 'analytics' && 'Bandingkan Cabang'}
                 </span>
               </div>
-              <h1 className="text-sm font-bold text-slate-900 leading-tight">
-                {currentPage === 'dashboard' && 'Pantau Kehadiran Karyawan'}
+              <h1 className="text-base font-bold text-slate-900 leading-tight">
+                {currentPage === 'dashboard' && 'Monitoring Kehadiran'}
                 {currentPage === 'logs' && 'Riwayat Absensi Karyawan'}
                 {currentPage === 'analytics' && 'Bandingkan Tiap Cabang'}
               </h1>
@@ -336,22 +336,25 @@ export function App() {
 
         {/* Main Body */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-5 min-w-0 max-w-full overflow-x-hidden">
-          {/* Real-time Date Range Picker */}
-          <DateRangePicker
-            startDate={startDate}
-            endDate={endDate}
-            preset={datePreset}
-            onSelectPreset={handleSelectDatePreset}
-            onApplyCustomDate={handleApplyCustomDate}
-            onResetDateFilter={handleResetDateFilter}
-          />
+          {/* Filter Controls - Gabung dalam 1 container flexibel */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Date Range Picker Card */}
+            <DateRangePicker
+              startDate={startDate}
+              endDate={endDate}
+              preset={datePreset}
+              onSelectPreset={handleSelectDatePreset}
+              onApplyCustomDate={handleApplyCustomDate}
+              onResetDateFilter={handleResetDateFilter}
+            />
 
-          {/* Location Selector Tabs */}
-          <LocationSelector
-            selectedLocation={selectedLocation}
-            onSelectLocation={setSelectedLocation}
-            session={session}
-          />
+            {/* Location Selector Card */}
+            <LocationSelector
+              selectedLocation={selectedLocation}
+              onSelectLocation={setSelectedLocation}
+              session={session}
+            />
+          </div>
 
           {/* View Switcher */}
           {currentPage === 'dashboard' && (

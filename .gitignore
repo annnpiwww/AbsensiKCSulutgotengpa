@@ -24,3 +24,7 @@ dist-ssr
 *.sw?
 .vercel
 .env*
+
+# Tooling artifacts (graphify / design-system)
+graphify-out/
+design-system/

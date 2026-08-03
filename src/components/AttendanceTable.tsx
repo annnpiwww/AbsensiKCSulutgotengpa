@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import {
   Search,
   Filter,
-  Calendar,
   CheckCircle2,
   Clock,
   HeartPulse,
@@ -17,6 +16,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import type { AttendanceRecord, AttendanceStatus } from '../types/attendance';
+import { DateField } from './ui/date-field';
 
 interface AttendanceTableProps {
   records: AttendanceRecord[];
@@ -75,6 +75,15 @@ const STATUS_BADGES: Record<AttendanceStatus, { bg: string; text: string; dot: s
   },
 };
 
+// Position color helper
+const getPositionColor = (position: string = '') => {
+  const posUpper = position.toUpperCase();
+  if (posUpper.includes('LEADER')) return 'text-emerald-600 font-semibold';
+  if (posUpper.includes('ADMIN')) return 'text-blue-600 font-semibold';
+  if (posUpper.includes('SPP') || posUpper.includes('SPL')) return 'text-rose-600 font-semibold';
+  return 'text-slate-400';
+};
+
 export const AttendanceTable: React.FC<AttendanceTableProps> = ({
   records,
   onEditRecord,
@@ -107,14 +116,14 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
   }, [filteredRecords, currentPage]);
 
   return (
-    <div className="bento-card rounded-2xl overflow-hidden mb-6 min-w-0 max-w-full">
+    <div className="bg-white rounded-2xl shadow-lg shadow-slate-200/60 border border-slate-200/60 overflow-hidden mb-6 min-w-0 max-w-full">
       {/* Header Controls */}
-      <div className="p-4 sm:p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3 w-full min-w-0 max-w-full">
+      <div className="p-4 sm:p-5 border-b border-blue-100/50 bg-gradient-to-r from-blue-50/30 to-transparent flex flex-col md:flex-row md:items-center justify-between gap-3 w-full min-w-0 max-w-full">
         <div>
-          <h3 className="font-semibold text-slate-900 text-sm uppercase tracking-wider">
+          <h3 className="font-bold text-slate-900 text-base tracking-tight">
             Detail Absen Karyawan
           </h3>
-          <p className="text-[11px] text-slate-500 font-normal mt-0.5">
+          <p className="text-xs text-slate-500 font-medium mt-1">
             Menampilkan {filteredRecords.length} dari {records.length} data absen
           </p>
         </div>
@@ -123,7 +132,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
           {/* Search Field */}
           <div className="relative w-full sm:w-auto">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-blue-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Cari nama atau NIP/NBM..."
@@ -132,20 +141,20 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              className="input-modern pl-8 text-xs py-1.5 w-full sm:w-48"
+              className="pl-8 text-xs py-1.5 w-full sm:w-48 border border-blue-100 bg-blue-50/30 rounded-lg focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 outline-none transition-all text-slate-700 placeholder:text-blue-400/60"
             />
           </div>
 
           {/* Status Dropdown */}
           <div className="relative">
-            <Filter className="w-3.5 h-3.5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Filter className="w-3.5 h-3.5 text-blue-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
             <select
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value as any);
                 setCurrentPage(1);
               }}
-              className="input-modern w-full sm:w-auto pl-11 pr-11 py-1.5 text-xs appearance-none cursor-pointer"
+              className="w-full sm:w-auto pl-11 pr-11 py-1.5 text-xs appearance-none cursor-pointer border border-blue-100 bg-blue-50/30 rounded-lg focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 outline-none transition-all text-slate-700"
             >
               <option value="ALL">Semua Status Absen</option>
               <option value="Hadir">Hadir</option>
@@ -157,29 +166,20 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
               <option value="Cuti">Cuti</option>
               <option value="Off">Off</option>
             </select>
-            <ChevronDown className="w-4 h-4 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <ChevronDown className="w-4 h-4 text-blue-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
 
           {/* Date Picker */}
-          <div className="flex items-center gap-1 bg-slate-50 border border-slate-200/80 rounded-xl px-2.5 py-1.5 text-xs">
-            <Calendar className="w-3.5 h-3.5 text-slate-400" />
-            <input
-              type="date"
+          <div className="flex items-center gap-2">
+            <DateField
               value={dateFilter}
-              onChange={(e) => {
-                setDateFilter(e.target.value);
+              onChange={(v) => {
+                setDateFilter(v);
                 setCurrentPage(1);
               }}
-              className="bg-transparent text-slate-700 font-medium focus:outline-none cursor-pointer"
+              placeholder="Filter Tanggal"
+              className="w-40 h-8 text-xs rounded-lg"
             />
-            {dateFilter && (
-              <button
-                onClick={() => setDateFilter('')}
-                className="text-[11px] text-rose-500 font-medium ml-1 hover:underline"
-              >
-                Reset
-              </button>
-            )}
           </div>
         </div>
       </div>
@@ -187,27 +187,27 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
       {/* Responsive Isolated Scroll Table Container */}
       <div className="overflow-x-auto w-full max-w-full min-w-0">
         <table className="w-full text-left text-xs min-w-[680px]">
-          <thead className="bg-slate-50/90 border-b border-slate-100 text-slate-500 uppercase tracking-wider text-[10px] font-semibold sticky top-0">
+          <thead className="bg-gradient-to-r from-blue-50 to-blue-100/50 border-b border-blue-100/50 text-blue-700 uppercase tracking-wider text-[10px] font-semibold sticky top-0">
             <tr>
-              <th className="px-5 py-3">Nama Karyawan</th>
-              <th className="px-4 py-3">Cabang</th>
-              <th className="px-4 py-3">Tanggal</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Catatan / Alasan</th>
-              <th className="px-4 py-3 text-right">Aksi</th>
+              <th className="px-4 py-3 w-[180px]">Nama Karyawan</th>
+              <th className="px-4 py-3 w-[100px]">Cabang</th>
+              <th className="px-4 py-3 w-[100px]">Tanggal</th>
+              <th className="px-4 py-3 w-[120px]">Status</th>
+              <th className="px-4 py-3 w-[200px]">Catatan / Alasan</th>
+              <th className="px-4 py-3 text-right w-[100px]">Aksi</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-blue-50/50">
             {paginatedRecords.length > 0 ? (
               paginatedRecords.map((r) => {
                 const badge = STATUS_BADGES[r.status] || STATUS_BADGES.Hadir;
 
                 return (
-                  <tr key={r.id} className="hover:bg-slate-50/80 transition-colors">
+                  <tr key={r.id} className="hover:bg-blue-50/30 transition-colors">
                     {/* Employee */}
-                    <td className="px-5 py-3.5">
-                      <div className="font-semibold text-slate-900 text-xs">{r.name}</div>
-                      <div className="text-[11px] text-slate-400 font-mono mt-0.5">
+                    <td className="px-4 py-3.5">
+                      <div className="font-semibold text-slate-900 text-xs truncate">{r.name}</div>
+                      <div className={`text-[11px] font-mono mt-0.5 truncate ${getPositionColor(r.position)}`}>
                         {r.employeeId} {r.position ? `• ${r.position}` : ''}
                       </div>
                     </td>
@@ -275,22 +275,22 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
       </div>
 
       {/* Pagination Controls */}
-      <div className="p-3.5 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
-        <span className="text-[11px] text-slate-500 font-medium">
-          Halaman <span className="font-semibold text-slate-900">{currentPage}</span> dari {totalPages}
+      <div className="p-3.5 border-t border-blue-100/50 flex items-center justify-between bg-gradient-to-r from-blue-50/30 to-transparent">
+        <span className="text-[11px] text-slate-600 font-medium">
+          Halaman <span className="font-semibold text-blue-700">{currentPage}</span> dari {totalPages}
         </span>
         <div className="flex items-center gap-1.5">
           <button
             disabled={currentPage === 1}
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+            className="p-1.5 rounded-lg border border-blue-100 text-blue-600 hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
           </button>
           <button
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+            className="p-1.5 rounded-lg border border-blue-100 text-blue-600 hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all"
           >
             <ChevronRight className="w-3.5 h-3.5" />
           </button>

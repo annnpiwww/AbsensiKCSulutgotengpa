@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, Check, Filter, X, ChevronDown, Clock } from 'lucide-react';
+import { DateField } from './ui/date-field';
 
 export type DateFilterPreset = 'ALL' | 'MONTHLY_1_25' | 'TODAY' | 'THIS_MONTH' | 'CUSTOM' | 'CUSTOM_SINGLE';
 
@@ -69,11 +70,11 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
                 Filter Periode Waktu
               </h3>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
-                Live Sync Realtime
+                Data Sinkron Terbaru
               </span>
             </div>
             <p className="text-[11px] text-slate-500 font-medium mt-0.5">
-              Filter berdasarkan tanggal konfirmasi
+              Filter berdasarkan tanggal
             </p>
           </div>
         </div>
@@ -114,36 +115,36 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
         <div className="pt-3 border-t border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-slate-50/70 p-3 rounded-lg border border-slate-200/60 min-w-0 max-w-full">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full lg:w-auto">
             {preset === 'CUSTOM_SINGLE' ? (
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
-                <span className="text-xs font-bold text-slate-600">Pilih Tanggal:</span>
-                <input
-                  type="date"
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto items-start sm:items-center">
+                <span className="text-xs font-bold text-blue-700">Pilih Tanggal:</span>
+                <DateField
                   value={tempStartDate}
-                  onChange={(e) => {
-                    handleStartChange(e.target.value);
-                    setTempEndDate(e.target.value);
+                  onChange={(v) => {
+                    handleStartChange(v);
+                    setTempEndDate(v);
                   }}
-                  className="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 shadow-2xs"
+                  placeholder="Pilih tanggal"
+                  className="w-full sm:w-44"
                 />
               </div>
             ) : (
               <>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
-                  <span className="text-xs font-bold text-slate-600">Dari:</span>
-                  <input
-                    type="date"
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto items-start sm:items-center">
+                  <span className="text-xs font-bold text-blue-600">Dari:</span>
+                  <DateField
                     value={tempStartDate}
-                    onChange={(e) => handleStartChange(e.target.value)}
-                    className="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 shadow-2xs"
+                    onChange={(v) => handleStartChange(v)}
+                    placeholder="Dari tanggal"
+                    className="w-full sm:w-44"
                   />
                 </div>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
-                  <span className="text-xs font-bold text-slate-600">Sampai:</span>
-                  <input
-                    type="date"
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto items-start sm:items-center">
+                  <span className="text-xs font-bold text-blue-600">Sampai:</span>
+                  <DateField
                     value={tempEndDate}
-                    onChange={(e) => handleEndChange(e.target.value)}
-                    className="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 shadow-2xs"
+                    onChange={(v) => handleEndChange(v)}
+                    placeholder="Sampai tanggal"
+                    className="w-full sm:w-44"
                   />
                 </div>
               </>

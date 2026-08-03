@@ -4,6 +4,7 @@ import {
   Pie,
   Cell,
   Tooltip,
+  Legend,
   ResponsiveContainer,
   LineChart,
   Line,
@@ -14,195 +15,158 @@ import {
   Bar,
 } from 'recharts';
 import type { AttendanceRecord, LocationCode } from '../types/attendance';
-import { ALL_LOCATIONS } from '../types/attendance';
+import { LOCATION_NAMES } from '../types/attendance';
 
 interface AttendanceChartsProps {
   records: AttendanceRecord[];
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  Hadir: '#10B981', // Emerald
-  Sakit: '#3B82F6', // Blue
-  SKD: '#0EA5E9',   // Sky Blue
-  Izin: '#F59E0B',  // Amber
-  Terlambat: '#F97316', // Orange
-  Alpa: '#F43F5E',  // Rose
-  Cuti: '#8B5CF6',  // Purple
-  Off: '#94A3B8',   // Slate
+  Hadir: '#10B981',
+  Terlambat: '#F59E0B',
+  Izin: '#3B82F6',
+  Sakit: '#EF4444',
+  SKD: '#8B5CF6',
+  Alpa: '#DC2626',
 };
 
 export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({ records }) => {
-  // 1. Donut Chart Data
-  const statusCounts: Record<string, number> = {};
+  // Pie Chart Data
+  const statusCounts = records.reduce((acc, r) => {
+    acc[r.status] = (acc[r.status] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
 
-  records.forEach((r) => {
-    statusCounts[r.status] = (statusCounts[r.status] || 0) + 1;
-  });
+  const pieData = Object.entries(statusCounts).map(([name, value]) => ({
+    name,
+    value,
+  }));
 
-  const pieData = Object.entries(statusCounts)
-    .map(([name, value]) => ({
-      name,
-      value,
-      color: STATUS_COLORS[name] || '#64748B',
-    }))
-    .filter((item) => item.value > 0);
+  // Bar Chart Data - Group by Location
+  const locationData = (Object.keys(LOCATION_NAMES) as LocationCode[])
+    .map((location) => {
+      const locationRecords = records.filter((r) => r.location === location);
+      const counts = locationRecords.reduce((acc, r) => {
+        acc[r.status] = (acc[r.status] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
 
-  // 2. Trend Line Data (grouped by date)
-  const dateMap = new Map<string, Record<string, any>>();
-  const sortedRecords = [...records].sort((a, b) => a.date.localeCompare(b.date));
-
-  sortedRecords.forEach((r) => {
-    if (!dateMap.has(r.date)) {
-      dateMap.set(r.date, { date: r.date.slice(5), Hadir: 0, Sakit: 0, SKD: 0, Izin: 0, Alpa: 0 });
-    }
-    const entry = dateMap.get(r.date)!;
-    entry[r.status] = (entry[r.status] || 0) + 1;
-  });
-
-  const trendData = Array.from(dateMap.values()).slice(-10);
-
-  // 3. Location Comparison Bar Chart
-  const locMap = new Map<LocationCode, Record<string, any>>();
-  ALL_LOCATIONS.forEach((location) => {
-    locMap.set(location, { location, Hadir: 0, Sakit: 0, SKD: 0, Izin: 0, Alpa: 0, Terlambat: 0 });
-  });
-
-  records.forEach((r) => {
-    const entry = locMap.get(r.location);
-    if (entry) {
-      entry[r.status] = (entry[r.status] || 0) + 1;
-    }
-  });
-
-  const barData = Array.from(locMap.values());
+      return {
+        location: location, // Gunakan kode singkat (TBM, MGAM, dll)
+        Hadir: counts['Hadir'] || 0,
+        Terlambat: counts['Terlambat'] || 0,
+        Sakit: counts['Sakit'] || 0,
+        SKD: counts['SKD'] || 0,
+        Izin: counts['Izin'] || 0,
+        Alpa: counts['Alpa'] || 0,
+      };
+    })
+    .filter((d) => Object.values(d).some((v) => typeof v === 'number' && v > 0))
+    .slice(0, 10);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-      {/* 1. Donut Chart: Status Distribution */}
-      <div className="bento-card p-5 flex flex-col justify-between">
-        <div className="flex items-center justify-between mb-2">
-          <div>
-            <h3 className="font-semibold text-slate-900 text-xs uppercase tracking-wider">
-              Porsi Status Absen
-            </h3>
-            <p className="text-[11px] text-slate-500 font-normal mt-0.5">Perbandingan persentase absen</p>
-          </div>
-          <span className="text-[11px] font-semibold px-2.5 py-0.5 bg-slate-100 rounded-md text-slate-600 border border-slate-200/60">
-            {records.length} Logs
-          </span>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Pie Chart Card */}
+      <div className="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/60 border border-slate-200/60 hover:shadow-xl transition-all duration-300">
+        <div className="mb-4">
+          <h3 className="text-base font-bold text-slate-900 mb-1">Distribusi Status Kehadiran</h3>
+          <p className="text-sm text-slate-500">Persentase tiap kategori absensi</p>
         </div>
-
-        <div className="h-48 w-full flex items-center justify-center my-1">
-          <ResponsiveContainer width="100%" height="100%" key={`pie-${records.length}`}>
+        <div style={{ width: '100%', height: 300 }}>
+          <ResponsiveContainer>
             <PieChart>
               <Pie
                 data={pieData}
                 cx="50%"
-                cy="50%"
-                innerRadius={50}
-                outerRadius={72}
-                paddingAngle={3}
+                cy="45%"
+                labelLine={false}
+                outerRadius={85}
+                fill="#8884d8"
                 dataKey="value"
+                strokeWidth={2}
+                stroke="#fff"
               >
                 {pieData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} stroke="#ffffff" strokeWidth={2} />
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={STATUS_COLORS[entry.name] || '#94a3b8'} 
+                  />
                 ))}
               </Pie>
-              <Tooltip
+              <Tooltip 
                 contentStyle={{
-                  backgroundColor: '#0f172a',
-                  color: '#ffffff',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 12px rgba(15,23,42,0.15)',
-                  border: 'none',
-                  fontSize: '11px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                  padding: '8px 12px',
                 }}
+                itemStyle={{
+                  color: '#334155',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                }}
+              />
+              <Legend 
+                verticalAlign="bottom" 
+                height={36}
+                iconType="circle"
+                formatter={(value, entry: any) => (
+                  <span style={{ color: '#64748b', fontSize: '12px', fontWeight: 500 }}>
+                    {value}: {entry.payload.value}
+                  </span>
+                )}
               />
             </PieChart>
           </ResponsiveContainer>
         </div>
-
-        {/* Custom Legend Grid */}
-        <div className="grid grid-cols-2 gap-2 pt-3 border-t border-slate-100">
-          {pieData.map((item) => (
-            <div key={item.name} className="flex items-center justify-between text-[11px]">
-              <div className="flex items-center gap-1.5 truncate">
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
-                <span className="font-medium text-slate-600 truncate">{item.name}</span>
-              </div>
-              <span className="font-semibold text-slate-900 ml-1">{item.value}</span>
-            </div>
-          ))}
-        </div>
       </div>
 
-      {/* 2. Line Chart: 10-Day Trend */}
-      <div className="bento-card p-5 flex flex-col justify-between">
-        <div className="flex items-center justify-between mb-2">
-          <div>
-            <h3 className="font-semibold text-slate-900 text-xs uppercase tracking-wider">
-              Tren Kehadiran Harian
-            </h3>
-            <p className="text-[11px] text-slate-500 font-normal mt-0.5">Pergerakan 10 tanggal terakhir</p>
-          </div>
+      {/* Bar Chart Card */}
+      <div className="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/60 border border-slate-200/60 hover:shadow-xl transition-all duration-300">
+        <div className="mb-4">
+          <h3 className="text-base font-bold text-slate-900 mb-1">Perbandingan Per Cabang</h3>
+          <p className="text-sm text-slate-500">Grafik kehadiran 10 Cabang teratas</p>
         </div>
-
-        <div className="h-56 w-full mt-2">
-          <ResponsiveContainer width="100%" height="100%" key={`trend-${records.length}`}>
-            <LineChart data={trendData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-              <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#0f172a',
-                  color: '#ffffff',
-                  borderRadius: '8px',
-                  border: 'none',
-                  fontSize: '11px',
-                }}
+        <div style={{ width: '100%', height: 280 }}>
+          <ResponsiveContainer>
+            <BarChart
+              data={locationData}
+              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis 
+                dataKey="location" 
+                tick={{ fontSize: 11, fill: '#64748b' }}
+                angle={-45}
+                textAnchor="end"
+                height={80}
+                stroke="#cbd5e1"
               />
-              <Line type="monotone" dataKey="Hadir" stroke={STATUS_COLORS.Hadir} strokeWidth={2.5} dot={false} />
-              <Line type="monotone" dataKey="Sakit" stroke={STATUS_COLORS.Sakit} strokeWidth={1.5} dot={false} />
-              <Line type="monotone" dataKey="Izin" stroke={STATUS_COLORS.Izin} strokeWidth={1.5} dot={false} />
-              <Line type="monotone" dataKey="Alpa" stroke={STATUS_COLORS.Alpa} strokeWidth={1.5} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* 3. Bar Chart: Location Comparison */}
-      <div className="bento-card p-5 flex flex-col justify-between">
-        <div className="flex items-center justify-between mb-2">
-          <div>
-            <h3 className="font-semibold text-slate-900 text-xs uppercase tracking-wider">
-              Komparasi Cabang
-            </h3>
-            <p className="text-[11px] text-slate-500 font-normal mt-0.5">Ringkasan per lokasi cabang</p>
-          </div>
-        </div>
-
-        <div className="h-56 w-full mt-2">
-          <ResponsiveContainer width="100%" height="100%" key={`bar-${records.length}`}>
-            <BarChart data={barData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-              <XAxis dataKey="location" tick={{ fontSize: 9, fill: '#64748b' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#0f172a',
-                  color: '#ffffff',
-                  borderRadius: '8px',
-                  border: 'none',
-                  fontSize: '11px',
-                }}
+              <YAxis 
+                tick={{ fontSize: 11, fill: '#64748b' }}
+                stroke="#cbd5e1"
               />
-              <Bar dataKey="Hadir" fill={STATUS_COLORS.Hadir} radius={[3, 3, 0, 0]} stackId="a" />
-              <Bar dataKey="Terlambat" fill={STATUS_COLORS.Terlambat} radius={[3, 3, 0, 0]} stackId="a" />
-              <Bar dataKey="Sakit" fill={STATUS_COLORS.Sakit} radius={[3, 3, 0, 0]} stackId="a" />
-              <Bar dataKey="SKD" fill={STATUS_COLORS.SKD} radius={[3, 3, 0, 0]} stackId="a" />
-              <Bar dataKey="Izin" fill={STATUS_COLORS.Izin} radius={[3, 3, 0, 0]} stackId="a" />
-              <Bar dataKey="Alpa" fill={STATUS_COLORS.Alpa} radius={[3, 3, 0, 0]} stackId="a" />
+              <Tooltip 
+                contentStyle={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                  padding: '8px 12px',
+                }}
+                itemStyle={{
+                  fontSize: '12px',
+                  fontWeight: 600,
+                }}
+                cursor={{ fill: 'rgba(59, 130, 246, 0.05)' }}
+              />
+              <Bar dataKey="Hadir" fill={STATUS_COLORS.Hadir} radius={[4, 4, 0, 0]} stackId="a" />
+              <Bar dataKey="Terlambat" fill={STATUS_COLORS.Terlambat} radius={[4, 4, 0, 0]} stackId="a" />
+              <Bar dataKey="Sakit" fill={STATUS_COLORS.Sakit} radius={[4, 4, 0, 0]} stackId="a" />
+              <Bar dataKey="SKD" fill={STATUS_COLORS.SKD} radius={[4, 4, 0, 0]} stackId="a" />
+              <Bar dataKey="Izin" fill={STATUS_COLORS.Izin} radius={[4, 4, 0, 0]} stackId="a" />
+              <Bar dataKey="Alpa" fill={STATUS_COLORS.Alpa} radius={[4, 4, 0, 0]} stackId="a" />
             </BarChart>
           </ResponsiveContainer>
         </div>

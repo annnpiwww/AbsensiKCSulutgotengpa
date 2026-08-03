@@ -26,10 +26,10 @@ export const ExceptionTrackers: React.FC<ExceptionTrackersProps> = ({ records })
         <div>
           <h3 className="font-semibold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-amber-500" />
-            <span>Pemantauan Khusus (Alpa / Sakit / Izin)</span>
+            <span>Monitoring Alpa / Sakit / Izin</span>
           </h3>
           <p className="text-[11px] text-slate-500 font-normal mt-0.5">
-            Cek karyawan yang sering absen untuk keperluan follow-up HRD.
+            Cek karyawan yang sering absen
           </p>
         </div>
 
@@ -79,7 +79,7 @@ export const ExceptionTrackers: React.FC<ExceptionTrackersProps> = ({ records })
           {alpaRecords.length > 0 ? (
             <div className="space-y-3">
               <div className="p-3 bg-rose-50 border border-rose-200/70 rounded-xl flex items-center justify-between text-xs text-rose-800 font-medium">
-                <span>⚠️ Warning: Data alpa harus dikonfirmasi langsung oleh Supervisor Cabang.</span>
+                <span><strong>Perhatian:</strong> Data alpa harus dikonfirmasi langsung oleh Supervisor Cabang.</span>
                 <span className="font-semibold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-md text-[10px]">
                   High Priority
                 </span>

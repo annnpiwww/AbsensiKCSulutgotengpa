@@ -14,201 +14,155 @@ import { AttendanceRecord } from '../types/attendance';
 
 interface KpiSummaryCardsProps {
   records: AttendanceRecord[];
-  selectedLocationName: string;
+  selectedLocationName?: string;
 }
 
-export const KpiSummaryCards: React.FC<KpiSummaryCardsProps> = ({
-  records,
-  selectedLocationName,
-}) => {
+export const KpiSummaryCards: React.FC<KpiSummaryCardsProps> = ({ records, selectedLocationName }) => {
   const totalLogs = records.length;
+  const hadir = records.filter((r) => r.status === 'Hadir').length;
+  const izin = records.filter((r) => r.status === 'Izin').length;
+  const sakit = records.filter((r) => r.status === 'Sakit').length;
+  const alpa = records.filter((r) => r.status === 'Alpa').length;
 
-  // Calculate distinct employees
-  const employeeSet = new Set(records.map((r) => r.employeeId));
-  const totalEmployees = employeeSet.size;
-
-  let hadir = 0;
-  let izin = 0;
-  let sakit = 0;
-  let alpa = 0;
-
-  records.forEach((r) => {
-    if (r.status === 'Hadir') hadir++;
-    else if (r.status === 'Izin') izin++;
-    else if (r.status === 'Sakit') sakit++;
-    else if (r.status === 'Alpa') alpa++;
-  });
-
-  const attendanceRate = totalLogs > 0 ? Math.round((hadir / totalLogs) * 100) : 0;
+  const hadirPercentage = totalLogs > 0 ? Math.round((hadir / totalLogs) * 100) : 0;
+  const izinPercentage = totalLogs > 0 ? Math.round((izin / totalLogs) * 100) : 0;
+  const sakitPercentage = totalLogs > 0 ? Math.round((sakit / totalLogs) * 100) : 0;
+  const alpaPercentage = totalLogs > 0 ? Math.round((alpa / totalLogs) * 100) : 0;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      {/* 1. HERO BENTO TILE: Executive Overview (Spans 2 cols on Desktop) */}
-      <div className="lg:col-span-2 bento-hero p-6 flex flex-col justify-between relative overflow-hidden group">
-        {/* Background Subtle Mesh / Glow */}
-        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-48 h-48 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/3 -mb-12 w-48 h-48 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-xs text-sky-300 font-medium">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Rangkuman Absen</span>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Card 1: Total Logs */}
+      <div className="group relative overflow-hidden bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-5 shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-300 border border-blue-500/20">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16" />
+        <div className="relative">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
+              <Users className="w-6 h-6 text-white" />
             </div>
-            <div className="flex items-center gap-1 text-[11px] text-slate-300 bg-white/5 px-2.5 py-1 rounded-lg border border-white/10">
-              <Building className="w-3.5 h-3.5 text-sky-400" />
-              <span className="truncate max-w-[180px]">{selectedLocationName}</span>
+            <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/10 backdrop-blur-sm">
+              <TrendingUp className="w-3.5 h-3.5 text-white" />
+              <span className="text-xs font-semibold text-white">100%</span>
             </div>
           </div>
-
-          <div className="pt-2">
-            <div className="text-xs text-slate-400 font-medium">Tingkat Kehadiran</div>
-            <div className="flex items-baseline gap-3 mt-1">
-              <span className="text-4xl font-extrabold text-white tracking-tight">
-                {attendanceRate}%
-              </span>
-              <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
-                <TrendingUp className="w-3.5 h-3.5" />
-                Target Min. 90%
-              </span>
-            </div>
+          <h3 className="text-sm font-medium text-blue-100 mb-1">Total Absensi</h3>
+          <div className="flex items-end gap-2">
+            <span className="text-3xl font-bold text-white tracking-tight">
+              {totalLogs}
+            </span>
+            <span className="text-sm font-medium text-blue-200 mb-1">records</span>
           </div>
-
-          {/* Progress Bar */}
-          <div className="space-y-1.5">
-            <div className="flex justify-between text-[11px] font-medium text-slate-300">
-              <span>Status Kehadiran ({hadir} / {totalLogs} Log)</span>
-              <span>{attendanceRate}%</span>
-            </div>
-            <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-sky-400 to-blue-500 rounded-full transition-all duration-500"
-                style={{ width: `${attendanceRate}%` }}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="relative z-10 pt-6 mt-4 border-t border-white/10 flex items-center justify-between text-xs text-slate-300">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-white/10 text-white">
-              <Users className="w-4 h-4 text-sky-300" />
-            </div>
-            <div>
-              <span className="font-semibold text-white">{totalEmployees} Karyawan</span>
-              <span className="text-slate-400 ml-1">tercatat di cabang</span>
-            </div>
-          </div>
-          <div className="text-[11px] text-slate-400 flex items-center gap-0.5">
-            Realtime updates <ArrowUpRight className="w-3.5 h-3.5" />
-          </div>
+          <p className="mt-2 text-xs font-medium text-blue-100/80 flex items-center gap-1">
+            <Building className="w-3.5 h-3.5" />
+            Semua Cabang
+          </p>
         </div>
       </div>
 
-      {/* 2. STAT BENTO TILE: Hadir (Hadir Tepat Waktu) */}
-      <div className="bento-card bento-card-hover p-5 flex flex-col justify-between">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            Hadir Tepat Waktu
-          </span>
-          <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
-            <CheckCircle2 className="w-4 h-4" />
+      {/* Card 2: Hadir */}
+      <div className="group relative overflow-hidden bg-white rounded-2xl p-5 shadow-lg shadow-slate-200/60 hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300 border border-slate-200/60 hover:border-emerald-200">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-50 to-transparent rounded-full -mr-16 -mt-16" />
+        <div className="relative">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-lg shadow-emerald-500/30 flex items-center justify-center">
+              <CheckCircle2 className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 border border-emerald-200">
+              <ArrowUpRight className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="text-xs font-semibold text-emerald-700">{hadirPercentage}%</span>
+            </div>
           </div>
-        </div>
-        <div className="mt-4">
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-slate-900 tracking-tight">
+          <h3 className="text-sm font-medium text-slate-600 mb-1">Hadir</h3>
+          <div className="flex items-end gap-2">
+            <span className="text-3xl font-bold text-slate-900 tracking-tight">
               {hadir}
             </span>
-            <span className="text-xs font-medium text-slate-500">
-              ({totalLogs > 0 ? Math.round((hadir / totalLogs) * 100) : 0}%)
+            <span className="text-sm font-medium text-emerald-600 mb-1">
+              ({hadirPercentage}%)
             </span>
           </div>
-          <p className="mt-1.5 text-[11px] text-emerald-700 font-medium flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            Hadir Sesuai Jadwal
+          <div className="mt-3 w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full transition-all duration-500"
+              style={{ width: `${hadirPercentage}%` }}
+            />
+          </div>
+          <p className="mt-2 text-xs font-medium text-emerald-600 flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            Kehadiran
           </p>
         </div>
       </div>
 
-      {/* 3. STAT BENTO TILE: Sakit */}
-      <div className="bento-card bento-card-hover p-5 flex flex-col justify-between">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            Izin Sakit
-          </span>
-          <div className="p-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
-            <HeartPulse className="w-4 h-4" />
+      {/* Card 3: Izin + Sakit */}
+      <div className="group relative overflow-hidden bg-white rounded-2xl p-5 shadow-lg shadow-slate-200/60 hover:shadow-xl hover:shadow-amber-500/10 transition-all duration-300 border border-slate-200/60 hover:border-amber-200">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-50 to-transparent rounded-full -mr-16 -mt-16" />
+        <div className="relative">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 shadow-lg shadow-amber-500/30 flex items-center justify-center">
+              <HeartPulse className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-50 border border-amber-200">
+              <Clock className="w-3.5 h-3.5 text-amber-600" />
+              <span className="text-xs font-semibold text-amber-700">{izinPercentage + sakitPercentage}%</span>
+            </div>
           </div>
-        </div>
-        <div className="mt-4">
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-slate-900 tracking-tight">
-              {sakit}
+          <h3 className="text-sm font-medium text-slate-600 mb-1">Izin & Sakit</h3>
+          <div className="flex items-end gap-2 mb-3">
+            <span className="text-3xl font-bold text-slate-900 tracking-tight">
+              {izin + sakit}
             </span>
-            <span className="text-xs font-medium text-slate-500">
-              ({totalLogs > 0 ? Math.round((sakit / totalLogs) * 100) : 0}%)
+            <span className="text-sm font-medium text-amber-600 mb-1">
+              ({izinPercentage + sakitPercentage}%)
             </span>
           </div>
-          <p className="mt-1.5 text-[11px] text-blue-700 font-medium flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-            Ada Surat Dokter / Izin Mandiri
-          </p>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-600 font-medium flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-amber-400" />
+                Izin
+              </span>
+              <span className="font-semibold text-slate-900">{izin} ({izinPercentage}%)</span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-600 font-medium flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-orange-500" />
+                Sakit
+              </span>
+              <span className="font-semibold text-slate-900">{sakit} ({sakitPercentage}%)</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* 4. STAT BENTO TILE: Izin */}
-      <div className="bento-card bento-card-hover p-5 flex flex-col justify-between">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            Permohonan Izin
-          </span>
-          <div className="p-2 rounded-xl bg-amber-50 text-amber-600 border border-amber-100">
-            <Clock className="w-4 h-4" />
+      {/* Card 4: Alpa */}
+      <div className="group relative overflow-hidden bg-white rounded-2xl p-5 shadow-lg shadow-slate-200/60 hover:shadow-xl hover:shadow-rose-500/10 transition-all duration-300 border border-slate-200/60 hover:border-rose-200">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-rose-50 to-transparent rounded-full -mr-16 -mt-16" />
+        <div className="relative">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500 to-rose-600 shadow-lg shadow-rose-500/30 flex items-center justify-center">
+              <AlertTriangle className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-rose-50 border border-rose-200">
+              <Sparkles className="w-3.5 h-3.5 text-rose-600" />
+              <span className="text-xs font-semibold text-rose-700">{alpaPercentage}%</span>
+            </div>
           </div>
-        </div>
-        <div className="mt-4">
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-slate-900 tracking-tight">
-              {izin}
-            </span>
-            <span className="text-xs font-medium text-slate-500">
-              ({totalLogs > 0 ? Math.round((izin / totalLogs) * 100) : 0}%)
-            </span>
-          </div>
-          <p className="mt-1.5 text-[11px] text-amber-700 font-medium flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-            Ada Tugas Dinas atau Izin Resmi
-          </p>
-        </div>
-      </div>
-
-      {/* 5. STAT BENTO TILE: Alpa (Alert tile) */}
-      <div className={`bento-card bento-card-hover p-5 flex flex-col justify-between ${
-        alpa > 0 ? 'border-rose-200 bg-rose-50/20' : ''
-      }`}>
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-rose-600 uppercase tracking-wider">
-            Ketidakhadiran Alpa
-          </span>
-          <div className={`p-2 rounded-xl border ${
-            alpa > 0
-              ? 'bg-rose-100 text-rose-700 border-rose-200'
-              : 'bg-slate-50 text-slate-400 border-slate-200/60'
-          }`}>
-            <AlertTriangle className="w-4 h-4" />
-          </div>
-        </div>
-        <div className="mt-4">
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-rose-600 tracking-tight">
+          <h3 className="text-sm font-medium text-slate-600 mb-1">Tanpa Keterangan</h3>
+          <div className="flex items-end gap-2">
+            <span className="text-3xl font-bold text-slate-900 tracking-tight">
               {alpa}
             </span>
-            <span className="text-xs font-medium text-rose-600">
-              ({totalLogs > 0 ? Math.round((alpa / totalLogs) * 100) : 0}%)
+            <span className="text-sm font-medium text-rose-600 mb-1">
+              ({alpaPercentage}%)
             </span>
           </div>
-          <p className="mt-1.5 text-[11px] font-medium text-rose-600 flex items-center gap-1">
+          <div className="mt-3 w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-rose-500 to-rose-600 rounded-full transition-all duration-500"
+              style={{ width: `${alpaPercentage}%` }}
+            />
+          </div>
+          <p className="mt-2 text-xs font-medium text-rose-600 flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
             {alpa > 0 ? 'Butuh Follow-up HRD' : 'Tidak Ada Alpa'}
           </p>
