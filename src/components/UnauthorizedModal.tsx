@@ -5,14 +5,23 @@ interface UnauthorizedModalProps {
   isOpen: boolean;
   onClose: () => void;
   email: string;
+  /** 'SUPERUSER' | 'LOCATION_ADMIN' — menentukan isi pesan */
+  role: 'SUPERUSER' | 'LOCATION_ADMIN';
+  /** Nama lokasi (utk admin cabang), contoh 'PBM - Pasar Bersehati Manado' */
+  locationName?: string;
 }
 
 export const UnauthorizedModal: React.FC<UnauthorizedModalProps> = ({
   isOpen,
   onClose,
   email,
+  role,
+  locationName,
 }) => {
   if (!isOpen) return null;
+
+  const isLocationAdmin = role === 'LOCATION_ADMIN';
+  const locLabel = locationName || 'Cabang';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
@@ -40,19 +49,30 @@ export const UnauthorizedModal: React.FC<UnauthorizedModalProps> = ({
         <div className="p-6 space-y-4">
           <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl">
             <p className="text-sm font-semibold text-rose-900 mb-2">
-              Akun Anda Bukan Superuser
+              {isLocationAdmin ? `Akun Anda Bukan Admin ${locLabel}` : 'Akun Anda Bukan Superuser'}
             </p>
             <p className="text-xs text-rose-700 leading-relaxed">
-              Email <span className="font-mono font-bold">{email}</span> tidak terdaftar sebagai superuser dalam sistem.
+              Email <span className="font-mono font-bold">{email}</span> tidak terdaftar{' '}
+              {isLocationAdmin ? (
+                <>sebagai admin <span className="font-semibold">{locLabel}</span> dalam sistem.</>
+              ) : (
+                <>sebagai superuser dalam sistem.</>
+              )}
             </p>
           </div>
 
           <div className="space-y-2">
             <p className="text-xs font-medium text-slate-700">
-              Hanya akun superuser yang terdaftar yang dapat mengakses sistem monitoring absensi KC SulutGoTengPa.
+              Hanya akun{' '}
+              {isLocationAdmin ? (
+                <>admin <span className="font-semibold">{locLabel}</span> yang terdaftar</>
+              ) : (
+                <>superuser yang terdaftar</>
+              )}{' '}
+              yang dapat mengakses sistem monitoring absensi KC SulutGoTengPa.
             </p>
             <p className="text-xs text-slate-500">
-              Hubungi administrator sistem untuk mendaftarkan akun Anda atau gunakan akun superuser yang telah terdaftar.
+              Hubungi administrator sistem untuk mendaftarkan akun Anda atau gunakan akun yang telah terdaftar.
             </p>
           </div>
         </div>

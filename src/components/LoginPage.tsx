@@ -283,6 +283,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         isOpen={showUnauthorizedModal}
         onClose={() => setShowUnauthorizedModal(false)}
         email={unauthorizedEmail}
+        role={role}
+        locationName={role === 'LOCATION_ADMIN' ? LOCATION_NAMES[selectedLocation] : undefined}
       />
     </div>
   );
