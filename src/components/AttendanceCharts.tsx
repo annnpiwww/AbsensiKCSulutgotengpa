@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   PieChart,
   Pie,
@@ -13,7 +13,7 @@ import {
   BarChart,
   Bar,
 } from 'recharts';
-import type { AttendanceRecord, LocationCode } from '../types/attendance';
+import type { AttendanceRecord } from '../types/attendance';
 import { LOCATION_NAMES } from '../types/attendance';
 
 interface AttendanceChartsProps {
@@ -31,50 +31,56 @@ const STATUS_COLORS: Record<string, string> = {
   Off: '#94a3b8',
 };
 
-export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({ records }) => {
+export const AttendanceChartsComponent: React.FC<AttendanceChartsProps> = ({ records }) => {
   // Data Pie Chart
-  const statusCounts = records.reduce((acc, r) => {
-    acc[r.status] = (acc[r.status] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const pieData = useMemo(() => {
+    const statusCounts = records.reduce((acc, r) => {
+      acc[r.status] = (acc[r.status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
 
-  const pieData = Object.keys(statusCounts).map((status) => ({
-    name: status,
-    value: statusCounts[status],
-  }));
+    return Object.keys(statusCounts).map((status) => ({
+      name: status,
+      value: statusCounts[status],
+    }));
+  }, [records]);
 
   // Data Line Chart
-  const dateCounts = records.reduce((acc, r) => {
-    if (!acc[r.date]) {
-      acc[r.date] = { date: r.date, Hadir: 0, TidakHadir: 0 };
-    }
-    if (r.status === 'Hadir') {
-      acc[r.date].Hadir += 1;
-    } else {
-      acc[r.date].TidakHadir += 1;
-    }
-    return acc;
-  }, {} as Record<string, { date: string; Hadir: number; TidakHadir: number }>);
+  const lineData = useMemo(() => {
+    const dateCounts = records.reduce((acc, r) => {
+      if (!acc[r.date]) {
+        acc[r.date] = { date: r.date, Hadir: 0, TidakHadir: 0 };
+      }
+      if (r.status === 'Hadir') {
+        acc[r.date].Hadir += 1;
+      } else {
+        acc[r.date].TidakHadir += 1;
+      }
+      return acc;
+    }, {} as Record<string, { date: string; Hadir: number; TidakHadir: number }>);
 
-  const lineData = Object.values(dateCounts).sort((a, b) => (a.date > b.date ? 1 : -1));
+    return Object.values(dateCounts).sort((a, b) => (a.date > b.date ? 1 : -1));
+  }, [records]);
 
   // Data Bar Chart per Lokasi
-  const locationCounts = records.reduce((acc, r) => {
-    const locCode = r.location || 'TBM';
-    const locName = LOCATION_NAMES[locCode] || locCode;
-    if (!acc[locName]) {
-      acc[locName] = { location: locName, Hadir: 0, Terlambat: 0, Sakit: 0, SKD: 0, Izin: 0, Alpa: 0 };
-    }
-    if (r.status === 'Hadir') acc[locName].Hadir += 1;
-    else if (r.status === 'Terlambat') acc[locName].Terlambat += 1;
-    else if (r.status === 'Sakit') acc[locName].Sakit += 1;
-    else if (r.status === 'SKD') acc[locName].SKD += 1;
-    else if (r.status === 'Izin') acc[locName].Izin += 1;
-    else if (r.status === 'Alpa') acc[locName].Alpa += 1;
-    return acc;
-  }, {} as Record<string, any>);
+  const barData = useMemo(() => {
+    const locationCounts = records.reduce((acc, r) => {
+      const locCode = r.location || 'TBM';
+      const locName = LOCATION_NAMES[locCode] || locCode;
+      if (!acc[locName]) {
+        acc[locName] = { location: locName, Hadir: 0, Terlambat: 0, Sakit: 0, SKD: 0, Izin: 0, Alpa: 0 };
+      }
+      if (r.status === 'Hadir') acc[locName].Hadir += 1;
+      else if (r.status === 'Terlambat') acc[locName].Terlambat += 1;
+      else if (r.status === 'Sakit') acc[locName].Sakit += 1;
+      else if (r.status === 'SKD') acc[locName].SKD += 1;
+      else if (r.status === 'Izin') acc[locName].Izin += 1;
+      else if (r.status === 'Alpa') acc[locName].Alpa += 1;
+      return acc;
+    }, {} as Record<string, any>);
 
-  const barData = Object.values(locationCounts);
+    return Object.values(locationCounts);
+  }, [records]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -221,3 +227,5 @@ export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({ records }) =
     </div>
   );
 };
+
+export const AttendanceCharts = React.memo(AttendanceChartsComponent);

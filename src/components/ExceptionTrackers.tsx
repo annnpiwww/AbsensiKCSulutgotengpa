@@ -24,7 +24,7 @@ export const ExceptionTrackers: React.FC<ExceptionTrackersProps> = ({ records })
       <div className="p-4 sm:p-5 bg-[var(--md-sys-color-surface-container-low)] border-b border-[var(--md-sys-color-outline-variant)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h3 className="font-bold text-[var(--md-sys-color-on-surface)] text-sm tracking-tight">
-            Daftar Karyawan Tidak Hadir
+            Rekap Kasus Khusus
           </h3>
           <p className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] mt-0.5">
             Rincian karyawan yang alpa, sakit, atau izin

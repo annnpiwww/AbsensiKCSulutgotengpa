@@ -15,7 +15,7 @@ interface KpiSummaryCardsProps {
   selectedLocationName?: string;
 }
 
-export const KpiSummaryCards: React.FC<KpiSummaryCardsProps> = ({ records, selectedLocationName }) => {
+const KpiSummaryCardsComponent: React.FC<KpiSummaryCardsProps> = ({ records, selectedLocationName }) => {
   const totalLogs = records.length;
   const hadir = records.filter((r) => r.status === 'Hadir').length;
   const izin = records.filter((r) => r.status === 'Izin').length;
@@ -167,10 +167,12 @@ export const KpiSummaryCards: React.FC<KpiSummaryCardsProps> = ({ records, selec
           </div>
           <p className="mt-2 text-xs font-medium text-[var(--md-sys-color-error)] flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--md-sys-color-error)]" />
-            {alpa > 0 ? 'Perlu Follow-up Tim HRD' : 'Nihil Alpa (Disiplin)'}
+            {alpa > 0 ? 'Butuh Tindak Lanjut' : 'Nihil Alpa (Disiplin)'}
           </p>
         </div>
       </div>
     </div>
   );
 };
+
+export const KpiSummaryCards = React.memo(KpiSummaryCardsComponent);

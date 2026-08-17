@@ -98,13 +98,17 @@ export interface AttendanceRecord {
   employeeId: string;
   name: string;
   position?: string;
+  role?: string;
   contractStatus?: string;
   location: LocationCode;
   date: string; // YYYY-MM-DD
   status: AttendanceStatus;
   notes?: string;
   createdAt: string;
+  updatedAt?: string;
   updatedBy: string;
+  timeIn?: string;
+  timeOut?: string;
 }
 
 export type UserRole = 'SUPERUSER' | 'LOCATION_ADMIN';

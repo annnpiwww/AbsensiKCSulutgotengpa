@@ -160,7 +160,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
         <Filter className="w-3.5 h-3.5 text-[var(--md-sys-color-primary)]" />
         <span>Status Filter:</span>
         <span className="text-[var(--md-sys-color-on-surface)] font-bold">
-          {preset === 'ALL' && 'Semua Log Presensi Terdata'}
+          {preset === 'ALL' && 'Semua Data'}
           {preset === 'MONTHLY_1_25' && 'Periode Tanggal 1 s/d 25 Bulanan'}
           {preset === 'THIS_MONTH' && 'Bulan Berjalan Ini'}
           {preset === 'TODAY' && 'Hari Ini'}

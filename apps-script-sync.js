@@ -23,7 +23,7 @@ const LOCATIONS = [
   'MGBP', 'MGLG', 'MGMP', 'MGMK', 'MGJY', 'MGNS'
 ];
 
-const LOCATION_NAMES = {
+const _LOCATION_NAMES = {
   'TBM': 'TBM - Toko Bintang Manado',
   'NBM': 'NBM - New Bendar Manado',
   'PBM': 'PBM - Pasar Bersehati Manado',
@@ -63,7 +63,7 @@ const STATUS_MAPPING = {
  * Entry point untuk Web App
  * URL akan otomatis hit function ini
  */
-function doGet(e) {
+function doGet(_e) {
   try {
     const spreadsheet = SpreadsheetApp.openById('1lC9vVHEXiCgCyaTJ509bIdiost4mrhs5vuRJPBGawJ4');
     const allRecords = [];
@@ -206,7 +206,7 @@ function parseSheetData(sheet, locationCode) {
 /**
  * Parse tanggal dari berbagai format
  */
-function parseDate(dateValue) {
+function _parseDate(dateValue) {
   if (!dateValue) return null;
   
   try {
@@ -219,7 +219,7 @@ function parseDate(dateValue) {
     const str = dateValue.toString().trim();
     
     // Format: DD/MM/YYYY atau DD-MM-YYYY
-    const match1 = str.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/);
+    const match1 = str.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
     if (match1) {
       const day = parseInt(match1[1]);
       const month = parseInt(match1[2]) - 1;
@@ -228,7 +228,7 @@ function parseDate(dateValue) {
     }
     
     // Format: YYYY-MM-DD
-    const match2 = str.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/);
+    const match2 = str.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
     if (match2) {
       const year = parseInt(match2[1]);
       const month = parseInt(match2[2]) - 1;
@@ -294,7 +294,7 @@ function mapStatus(code) {
  * Test function - untuk debug manual
  * Cara pake: Pilih "testSync" di dropdown, terus Run
  */
-function testSync() {
+function _testSync() {
   Logger.log('🧪 TESTING SYNC...\n');
   
   const result = doGet();
@@ -326,7 +326,7 @@ function testSync() {
  * Debug function - cek nama sheet
  * Cara pake: Pilih "debugSheets" di dropdown, terus Run
  */
-function debugSheets() {
+function _debugSheets() {
   Logger.log('🔍 CHECKING SHEETS...\n');
   
   const spreadsheet = SpreadsheetApp.openById('1lC9vVHEXiCgCyaTJ509bIdiost4mrhs5vuRJPBGawJ4');
@@ -356,7 +356,7 @@ function debugSheets() {
 /**
  * Generate summary report
  */
-function generateSummaryReport() {
+function _generateSummaryReport() {
   Logger.log('📊 GENERATING SUMMARY...\n');
   
   const result = doGet();

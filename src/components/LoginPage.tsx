@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import type { UserSession, LocationCode } from '../types/attendance';
 import { LOCATION_NAMES } from '../types/attendance';
 import { AppApi } from '../services/api';
-import { ShieldCheck, UserCheck, Lock, Building2, CheckCircle2, ArrowRight } from 'lucide-react';
+import { ShieldCheck, UserCheck, Lock, Building2, ArrowRight } from 'lucide-react';
 import { UnauthorizedModal } from './UnauthorizedModal';
 
 interface LoginPageProps {
@@ -70,13 +70,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 setUnauthorizedEmail(realEmail);
                 setShowUnauthorizedModal(true);
               }
-            } catch (err) {
+            } catch {
               setErrorMessage('Gagal memuat profil pengguna Google.');
             }
           },
         });
         client.requestAccessToken();
-      } catch (err) {
+      } catch {
         handleDirectLogin();
       }
     } else {
@@ -104,7 +104,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           setUnauthorizedEmail(email);
           setShowUnauthorizedModal(true);
         }
-      } catch (err) {
+      } catch {
         setIsSimulatingGoogle(false);
         setErrorMessage('Terjadi kesalahan koneksi server.');
       }

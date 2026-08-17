@@ -1,23 +1,33 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ModernLogin } from './components/ui/modern-login';
 import { Sidebar, PageView } from './components/Sidebar';
 import { DateRangePicker, DateFilterPreset } from './components/DateRangePicker';
 import { LocationSelector } from './components/LocationSelector';
 import { KpiSummaryCards } from './components/KpiSummaryCards';
-import { AttendanceCharts } from './components/AttendanceCharts';
 import { AttendanceTable } from './components/AttendanceTable';
 import { ExceptionTrackers } from './components/ExceptionTrackers';
-import { AttendanceLogPage } from './components/AttendanceLogPage';
-import { LocationAnalyticsPage } from './components/LocationAnalyticsPage';
 import { AddAttendanceModal } from './components/AddAttendanceModal';
-import { GoogleSheetsSyncModal } from './components/GoogleSheetsSyncModal';
 import { KpiSkeletonGrid, TableSkeleton, AnalyticsSkeleton } from './components/SkeletonLoader';
-import type { AttendanceRecord, LocationCode, UserSession } from './types/attendance';
+import type { AttendanceRecord, AttendanceStatus, LocationCode, UserSession } from './types/attendance';
 import { LOCATION_NAMES } from './types/attendance';
 import { AttendanceService } from './services/attendanceStore';
 import { AppApi } from './services/api';
+import { getVerifiedSession } from './config/auth';
 import { Menu, ShieldCheck, UserCheck } from 'lucide-react';
+
+const AttendanceCharts = lazy(() =>
+  import('./components/AttendanceCharts').then((m) => ({ default: m.AttendanceCharts }))
+);
+const AttendanceLogPage = lazy(() =>
+  import('./components/AttendanceLogPage').then((m) => ({ default: m.AttendanceLogPage }))
+);
+const LocationAnalyticsPage = lazy(() =>
+  import('./components/LocationAnalyticsPage').then((m) => ({ default: m.LocationAnalyticsPage }))
+);
+const GoogleSheetsSyncModal = lazy(() =>
+  import('./components/GoogleSheetsSyncModal').then((m) => ({ default: m.GoogleSheetsSyncModal }))
+);
 
 export function App() {
   // Helper to resolve route path
@@ -28,17 +38,9 @@ export function App() {
     return 'dashboard';
   };
 
-  // Auth state (null if logged out, or UserSession)
+  // Auth state (null if logged out, or UserSession verified with integrity signature)
   const [session, setSession] = useState<UserSession | null>(() => {
-    const saved = localStorage.getItem('absensi_session');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return null;
-      }
-    }
-    return null;
+    return getVerifiedSession();
   });
 
   // Navigation page state synced with URL
@@ -238,6 +240,26 @@ export function App() {
     setIsAddModalOpen(true);
   };
 
+  const handleBulkUpdateStatus = (recordIds: string[], newStatus: AttendanceStatus) => {
+    const updated = records.map((r) => {
+      if (recordIds.includes(r.id)) {
+        return {
+          ...r,
+          status: newStatus,
+          updatedAt: new Date().toISOString(),
+          updatedBy: session?.name || 'Admin Cabang',
+        };
+      }
+      return r;
+    });
+    setRecords(updated);
+    try {
+      localStorage.setItem('absensi_kc_sulutgopas_records_v3', JSON.stringify(updated));
+    } catch (e) {
+      console.warn('SafeLocalStorage: Storage failed during bulk update', e);
+    }
+  };
+
   const handleExportCSV = () => {
     AttendanceService.exportToCSV(filteredRecords);
   };
@@ -252,14 +274,18 @@ export function App() {
         if (!res.ok) throw new Error();
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
-          localStorage.setItem('absensi_kc_sulutgopas_records_v3', JSON.stringify(data));
+          try {
+            localStorage.setItem('absensi_kc_sulutgopas_records_v3', JSON.stringify(data));
+          } catch (storageErr) {
+            console.warn('SafeLocalStorage: Failed to cache Google Sheets data in localStorage', storageErr);
+          }
           AttendanceService.initialize();
           setRecords(data);
           alert('Berhasil memuat ulang data langsung dari Google Sheet!');
           return;
         }
         throw new Error();
-      } catch (e) {
+      } catch {
         alert('Gagal mengambil data dari Google Sheets. Data direset ke data sampel lokal.');
         const reset = AttendanceService.resetToMockData();
         setRecords(reset);
@@ -385,11 +411,14 @@ export function App() {
                       records={filteredRecords}
                       selectedLocationName={selectedLocationName}
                     />
-                    <AttendanceCharts records={filteredRecords} />
+                    <Suspense fallback={<div className="h-64 bg-[var(--md-sys-color-surface-container-lowest)] rounded-2xl animate-pulse" />}>
+                      <AttendanceCharts records={filteredRecords} />
+                    </Suspense>
                     <AttendanceTable
                       records={filteredRecords}
                       onEditRecord={handleEditRecord}
                       isEditable={session.role === 'SUPERUSER' || session.role === 'LOCATION_ADMIN'}
+                      onBulkUpdateStatus={handleBulkUpdateStatus}
                     />
                     <ExceptionTrackers records={filteredRecords} />
                   </>
@@ -408,15 +437,18 @@ export function App() {
                 {isLoadingData && records.length === 0 ? (
                   <TableSkeleton rows={8} />
                 ) : (
-                  <AttendanceLogPage
-                    records={filteredRecords}
-                    onEditRecord={handleEditRecord}
-                    isEditable={session.role === 'SUPERUSER' || session.role === 'LOCATION_ADMIN'}
-                    onOpenAddModal={() => {
-                      setEditingRecord(null);
-                      setIsAddModalOpen(true);
-                    }}
-                  />
+                  <Suspense fallback={<TableSkeleton rows={8} />}>
+                    <AttendanceLogPage
+                      records={filteredRecords}
+                      onEditRecord={handleEditRecord}
+                      isEditable={session.role === 'SUPERUSER' || session.role === 'LOCATION_ADMIN'}
+                      onOpenAddModal={() => {
+                        setEditingRecord(null);
+                        setIsAddModalOpen(true);
+                      }}
+                      onBulkUpdateStatus={handleBulkUpdateStatus}
+                    />
+                  </Suspense>
                 )}
               </motion.div>
             )}
@@ -432,7 +464,9 @@ export function App() {
                 {isLoadingData && records.length === 0 ? (
                   <AnalyticsSkeleton />
                 ) : (
-                  <LocationAnalyticsPage records={filteredRecords} />
+                  <Suspense fallback={<AnalyticsSkeleton />}>
+                    <LocationAnalyticsPage records={filteredRecords} />
+                  </Suspense>
                 )}
               </motion.div>
             )}
@@ -452,13 +486,15 @@ export function App() {
         session={session}
       />
 
-      <GoogleSheetsSyncModal
-        isOpen={isSyncModalOpen}
-        onClose={() => setIsSyncModalOpen(false)}
-        records={records}
-        onExportCSV={handleExportCSV}
-        onImportCSV={(imported) => setRecords(imported)}
-      />
+      <Suspense fallback={null}>
+        <GoogleSheetsSyncModal
+          isOpen={isSyncModalOpen}
+          onClose={() => setIsSyncModalOpen(false)}
+          records={records}
+          onExportCSV={handleExportCSV}
+          onImportCSV={(imported) => setRecords(imported)}
+        />
+      </Suspense>
     </div>
   );
 }

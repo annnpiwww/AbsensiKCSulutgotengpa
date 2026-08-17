@@ -12,15 +12,29 @@ export class AttendanceService {
   private static records: AttendanceRecord[] = [];
 
   public static initialize(): AttendanceRecord[] {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        this.records = JSON.parse(saved);
-        return this.records;
-      } catch (e) {
-        console.error('Failed to parse stored records', e);
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            this.records = parsed;
+            return this.records;
+          }
+          console.warn('[AttendanceStore] SafeRecovery: Stored data is not a valid array. Corrupted data reset to mock data.');
+        } catch (e) {
+          console.error('[AttendanceStore] SafeRecovery: Corrupted JSON data in localStorage detected. Resetting to mock data.', e);
+        }
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+        } catch (removeErr) {
+          console.error('[AttendanceStore] SafeLocalStorage: Failed to remove corrupted item.', removeErr);
+        }
       }
+    } catch (e) {
+      console.error('[AttendanceStore] SafeLocalStorage: Error reading from localStorage during initialize:', e);
     }
+
     this.records = generateMockAttendance();
     this.save();
     return this.records;
@@ -33,8 +47,27 @@ export class AttendanceService {
     return this.records;
   }
 
-  public static save() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(this.records));
+  public static save(): boolean {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.records));
+      return true;
+    } catch (error) {
+      if (
+        error instanceof DOMException &&
+        (error.name === 'QuotaExceededError' ||
+          error.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+          error.code === 22 ||
+          error.code === 1014)
+      ) {
+        console.warn(
+          '[AttendanceStore] SafeLocalStorage: Storage lokal (localStorage) penuh! QuotaExceededError terdeteksi.',
+          error
+        );
+      } else {
+        console.error('[AttendanceStore] SafeLocalStorage: Gagal menyimpan data ke localStorage.', error);
+      }
+      return false;
+    }
   }
 
   public static addRecord(record: Omit<AttendanceRecord, 'id' | 'createdAt'>): AttendanceRecord {
@@ -119,18 +152,31 @@ export class AttendanceService {
     });
   }
 
+  /**
+   * Sanitizes string value to prevent CSV Formula Injection.
+   * If value starts with '=', '+', '-', or '@', prepends single quote (').
+   */
+  private static sanitizeCsvField(val: string | number | undefined | null): string {
+    if (val === undefined || val === null) return '';
+    const str = String(val);
+    if (/^[=+\-@]/.test(str)) {
+      return `'${str}`;
+    }
+    return str;
+  }
+
   public static exportToCSV(records: AttendanceRecord[]) {
     const headers = ['ID', 'Employee NIP', 'Name', 'Position', 'Location', 'Date', 'Status', 'Notes', 'Updated By'];
     const rows = records.map((r) => [
-      r.id,
-      r.employeeId,
-      `"${r.name}"`,
-      `"${r.position || ''}"`,
-      r.location,
-      r.date,
-      r.status,
-      `"${r.notes || ''}"`,
-      `"${r.updatedBy}"`,
+      AttendanceService.sanitizeCsvField(r.id),
+      AttendanceService.sanitizeCsvField(r.employeeId),
+      `"${AttendanceService.sanitizeCsvField(r.name).replace(/"/g, '""')}"`,
+      `"${AttendanceService.sanitizeCsvField(r.position || '').replace(/"/g, '""')}"`,
+      AttendanceService.sanitizeCsvField(r.location),
+      AttendanceService.sanitizeCsvField(r.date),
+      AttendanceService.sanitizeCsvField(r.status),
+      `"${AttendanceService.sanitizeCsvField(r.notes || '').replace(/"/g, '""')}"`,
+      `"${AttendanceService.sanitizeCsvField(r.updatedBy).replace(/"/g, '""')}"`,
     ]);
 
     const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');

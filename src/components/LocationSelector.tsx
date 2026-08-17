@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MapPin, Lock, ChevronDown, Building2, Check } from 'lucide-react';
-import { LocationCode, ALL_LOCATIONS, LOCATION_NAMES, LOCATION_FULL_NAMES, UserSession } from '../types/attendance';
+import { LocationCode, ALL_LOCATIONS, LOCATION_FULL_NAMES, UserSession } from '../types/attendance';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 
 interface LocationSelectorProps {

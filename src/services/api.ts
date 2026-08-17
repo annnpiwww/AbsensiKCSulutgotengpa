@@ -1,6 +1,6 @@
 import type { AttendanceRecord, UserSession, LocationCode } from '../types/attendance';
 import { AttendanceService } from './attendanceStore';
-import { validateAuth } from '../config/auth';
+import { validateAuth, saveSignedSession, clearSessionStorage } from '../config/auth';
 
 /**
  * Endpoints API Service Abstraction
@@ -37,9 +37,13 @@ export class AppApi {
       email: credentials.email,
     };
 
-    localStorage.setItem('absensi_session', JSON.stringify(session));
+    saveSignedSession(session);
     const token = `token_google_${Date.now()}_${Math.random().toString(36).substring(2)}`;
-    localStorage.setItem('absensi_auth_token', token);
+    try {
+      localStorage.setItem('absensi_auth_token', token);
+    } catch (e) {
+      console.warn('SafeLocalStorage: Failed to set auth token', e);
+    }
 
     return {
       success: true,
@@ -50,8 +54,7 @@ export class AppApi {
 
   // POST /api/logout
   public static async logout(): Promise<{ success: boolean }> {
-    localStorage.removeItem('absensi_session');
-    localStorage.removeItem('absensi_auth_token');
+    clearSessionStorage();
     return { success: true };
   }
 

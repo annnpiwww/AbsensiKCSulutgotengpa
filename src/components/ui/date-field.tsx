@@ -7,8 +7,6 @@ import { Popover, PopoverContent, PopoverTrigger } from './popover';
 import { Button } from './button';
 import { cn } from '../../lib/utils';
 
-const DATE_FMT = 'yyyy-MM-dd';
-
 function toCivil(d: Date | undefined): string {
   if (!d) return '';
   // Treat as civil date locally; avoid UTC off-by-one

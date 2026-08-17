@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import type { AttendanceRecord, LocationCode } from '../types/attendance';
-import { LOCATION_NAMES, LOCATION_FULL_NAMES } from '../types/attendance';
+import { LOCATION_FULL_NAMES } from '../types/attendance';
 import {
   AlertOctagon,
   Award,
@@ -75,7 +75,7 @@ export const LocationAnalyticsPage: React.FC<LocationAnalyticsPageProps> = ({ re
         <div>
           <h2 className="text-lg font-extrabold text-[var(--md-sys-color-on-surface)] tracking-tight flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-[var(--md-sys-color-primary)]" />
-            <span>Analisis Kehadiran per Cabang</span>
+            <span>Perbandingan Cabang</span>
           </h2>
           <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] mt-0.5">
             Perbandingan kehadiran karyawan antar kantor cabang

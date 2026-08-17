@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, FileSpreadsheet, RefreshCw, Download, ExternalLink } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { X, FileSpreadsheet, RefreshCw, Download, Upload, ExternalLink } from 'lucide-react';
 import type { AttendanceRecord } from '../types/attendance';
 import { ALL_LOCATIONS, LOCATION_NAMES } from '../types/attendance';
 
@@ -20,16 +20,89 @@ export const DEFAULT_APPS_SCRIPT_URL =
 export const GoogleSheetsSyncModal: React.FC<GoogleSheetsSyncModalProps> = ({
   isOpen,
   onClose,
-  records,
+  records: _records,
   onExportCSV,
   onImportCSV,
 }) => {
-  const [sheetUrl, setSheetUrl] = useState(DEFAULT_SPREADSHEET_URL);
-  const [scriptUrl, setScriptUrl] = useState(DEFAULT_APPS_SCRIPT_URL);
+  const [sheetUrl] = useState(DEFAULT_SPREADSHEET_URL);
+  const [scriptUrl] = useState(DEFAULT_APPS_SCRIPT_URL);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
+
+  const handleFileImportChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string;
+        if (!text) return;
+
+        const lines = text.split(/\r?\n/).filter((line) => line.trim() !== '');
+        if (lines.length < 2) {
+          setSyncStatus('File CSV kosong atau tidak memiliki baris data.');
+          return;
+        }
+
+        const parseCSVLine = (line: string) => {
+          const result: string[] = [];
+          let cur = '';
+          let inQuotes = false;
+          for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            if (char === '"') {
+              inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+              result.push(cur.trim().replace(/^"|"$/g, ''));
+              cur = '';
+            } else {
+              cur += char;
+            }
+          }
+          result.push(cur.trim().replace(/^"|"$/g, ''));
+          return result;
+        };
+
+        const importedRecords: AttendanceRecord[] = [];
+        for (let i = 1; i < lines.length; i++) {
+          const cols = parseCSVLine(lines[i]);
+          if (cols.length < 4) continue;
+
+          const record: AttendanceRecord = {
+            id: cols[0] || `rec_${Date.now()}_${i}`,
+            date: cols[1] || new Date().toISOString().split('T')[0],
+            location: (cols[2] as any) || 'TBM',
+            name: cols[3] || 'Karyawan',
+            employeeId: cols[4] || `EMP-${i}`,
+            status: (cols[5] as any) || 'Hadir',
+            timeIn: cols[6] || '08:00',
+            timeOut: cols[7] || '17:00',
+            position: cols[8] || 'Staff',
+            notes: cols[9] || '',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            updatedBy: cols[10] || 'Import CSV Offline',
+          };
+          importedRecords.push(record);
+        }
+
+        if (importedRecords.length > 0) {
+          onImportCSV(importedRecords);
+          setSyncStatus(`Berhasil mengimpor ${importedRecords.length} data presensi dari file CSV!`);
+        } else {
+          setSyncStatus('Format CSV tidak dapat dibaca atau baris data tidak valid.');
+        }
+      } catch (err: any) {
+        setSyncStatus(`Gagal membaca file CSV: ${err.message}`);
+      }
+    };
+    reader.readAsText(file);
+    if (e.target) e.target.value = '';
+  };
 
   const handleFetchFromSheet = async () => {
     setIsSyncing(true);
@@ -64,7 +137,7 @@ export const GoogleSheetsSyncModal: React.FC<GoogleSheetsSyncModalProps> = ({
             </div>
             <div>
               <h2 className="font-bold text-lg text-[var(--md-sys-color-on-surface)]">
-                Integrasi Realtime Google Sheets
+                Sync Google Sheets
               </h2>
               <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] mt-0.5">
                 Sinkronisasi database absensi dengan Spreadsheet KC Sulutgo
@@ -128,9 +201,9 @@ export const GoogleSheetsSyncModal: React.FC<GoogleSheetsSyncModalProps> = ({
           {/* Breakdown Sheet Tabs Info */}
           <div>
             <h4 className="text-xs font-bold text-[var(--md-sys-color-on-surface)] mb-2">
-              Daftar Tab Sheet Berdasarkan Kantor Cabang (13 Sheet)
+              Daftar Tab Sheet Berdasarkan Kantor Cabang (18 Sheet Cabang Resmi)
             </h4>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-44 overflow-y-auto pr-1">
               {ALL_LOCATIONS.map((loc) => (
                 <div
                   key={loc}
@@ -143,17 +216,33 @@ export const GoogleSheetsSyncModal: React.FC<GoogleSheetsSyncModalProps> = ({
           </div>
 
           {/* Fallback CSV */}
-          <div className="pt-4 border-t border-[var(--md-sys-color-outline-variant)] flex items-center justify-between">
+          <div className="pt-4 border-t border-[var(--md-sys-color-outline-variant)] flex flex-wrap items-center justify-between gap-2">
             <span className="text-xs text-[var(--md-sys-color-on-surface-variant)]">
-              Backup / Offline Export Data:
+              Backup / Offline Sync (CSV):
             </span>
-            <button
-              onClick={onExportCSV}
-              className="m3-btn-outlined text-xs py-1.5 px-4"
-            >
-              <Download className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Export CSV File</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onExportCSV}
+                className="m3-btn-outlined text-xs py-1.5 px-3"
+              >
+                <Download className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Export CSV</span>
+              </button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept=".csv"
+                onChange={handleFileImportChange}
+                className="hidden"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="m3-btn-tonal text-xs py-1.5 px-3"
+              >
+                <Upload className="w-3.5 h-3.5 text-blue-600" />
+                <span>Import CSV File</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

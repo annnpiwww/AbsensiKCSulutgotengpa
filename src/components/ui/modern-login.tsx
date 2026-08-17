@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogIn, ShieldCheck, UserCheck, Building2, ChevronDown, Lock, ArrowRight } from 'lucide-react';
+import { ShieldCheck, UserCheck, Building2, ChevronDown, Lock, ArrowRight } from 'lucide-react';
 import type { UserSession, LocationCode } from '../../types/attendance';
 import { LOCATION_NAMES } from '../../types/attendance';
 import { AppApi } from '../../services/api';
