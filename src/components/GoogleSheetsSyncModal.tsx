@@ -1,7 +1,17 @@
 import React, { useState, useRef } from 'react';
-import { X, FileSpreadsheet, RefreshCw, Download, Upload, ExternalLink } from 'lucide-react';
+import {
+  X,
+  FileSpreadsheet,
+  RefreshCw,
+  Download,
+  Upload,
+  ExternalLink,
+  Settings,
+  Check,
+  RotateCcw,
+} from 'lucide-react';
 import type { AttendanceRecord } from '../types/attendance';
-import { ALL_LOCATIONS, LOCATION_NAMES } from '../types/attendance';
+import { ALL_LOCATIONS, LOCATION_FULL_NAMES } from '../types/attendance';
 
 interface GoogleSheetsSyncModalProps {
   isOpen: boolean;
@@ -24,13 +34,47 @@ export const GoogleSheetsSyncModal: React.FC<GoogleSheetsSyncModalProps> = ({
   onExportCSV,
   onImportCSV,
 }) => {
-  const [sheetUrl] = useState(DEFAULT_SPREADSHEET_URL);
-  const [scriptUrl] = useState(DEFAULT_APPS_SCRIPT_URL);
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [sheetUrl, setSheetUrl] = useState<string>(() => {
+    return localStorage.getItem('absensi_custom_sheet_url') || DEFAULT_SPREADSHEET_URL;
+  });
+  const [scriptUrl, setScriptUrl] = useState<string>(() => {
+    return localStorage.getItem('absensi_custom_script_url') || DEFAULT_APPS_SCRIPT_URL;
+  });
+
+  const [inputSheetUrl, setInputSheetUrl] = useState<string>(sheetUrl);
+  const [inputScriptUrl, setInputScriptUrl] = useState<string>(scriptUrl);
+  const [isEditingUrl, setIsEditingUrl] = useState<boolean>(false);
+  const [urlSaveStatus, setUrlSaveStatus] = useState<string | null>(null);
+
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
+
+  const handleSaveLink = () => {
+    const trimmedSheet = inputSheetUrl.trim() || DEFAULT_SPREADSHEET_URL;
+    const trimmedScript = inputScriptUrl.trim() || DEFAULT_APPS_SCRIPT_URL;
+    localStorage.setItem('absensi_custom_sheet_url', trimmedSheet);
+    localStorage.setItem('absensi_custom_script_url', trimmedScript);
+    setSheetUrl(trimmedSheet);
+    setScriptUrl(trimmedScript);
+    setUrlSaveStatus('Link Spreadsheet & API Apps Script berhasil disimpan!');
+    setTimeout(() => setUrlSaveStatus(null), 3500);
+    setIsEditingUrl(false);
+  };
+
+  const handleResetDefault = () => {
+    localStorage.removeItem('absensi_custom_sheet_url');
+    localStorage.removeItem('absensi_custom_script_url');
+    setInputSheetUrl(DEFAULT_SPREADSHEET_URL);
+    setInputScriptUrl(DEFAULT_APPS_SCRIPT_URL);
+    setSheetUrl(DEFAULT_SPREADSHEET_URL);
+    setScriptUrl(DEFAULT_APPS_SCRIPT_URL);
+    setUrlSaveStatus('Link dikembalikan ke konfigurasi default.');
+    setTimeout(() => setUrlSaveStatus(null), 3500);
+    setIsEditingUrl(false);
+  };
 
   const handleFileImportChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -67,34 +111,36 @@ export const GoogleSheetsSyncModal: React.FC<GoogleSheetsSyncModalProps> = ({
           return result;
         };
 
-        const importedRecords: AttendanceRecord[] = [];
+        const headers = parseCSVLine(lines[0]).map((h) => h.toLowerCase().replace(/[^a-z0-9]/g, ''));
+        const dateIdx = headers.findIndex((h) => h.includes('tanggal') || h.includes('date'));
+        const nameIdx = headers.findIndex((h) => h.includes('nama') || h.includes('name'));
+        const locIdx = headers.findIndex((h) => h.includes('lokasi') || h.includes('location') || h.includes('cabang'));
+        const statusIdx = headers.findIndex((h) => h.includes('status'));
+
+        const parsedRecords: AttendanceRecord[] = [];
         for (let i = 1; i < lines.length; i++) {
           const cols = parseCSVLine(lines[i]);
-          if (cols.length < 4) continue;
+          if (cols.length <= Math.max(dateIdx, nameIdx, locIdx, statusIdx)) continue;
 
-          const record: AttendanceRecord = {
-            id: cols[0] || `rec_${Date.now()}_${i}`,
-            date: cols[1] || new Date().toISOString().split('T')[0],
-            location: (cols[2] as any) || 'TBM',
-            name: cols[3] || 'Karyawan',
-            employeeId: cols[4] || `EMP-${i}`,
-            status: (cols[5] as any) || 'Hadir',
-            timeIn: cols[6] || '08:00',
-            timeOut: cols[7] || '17:00',
-            position: cols[8] || 'Staff',
-            notes: cols[9] || '',
+          parsedRecords.push({
+            id: `csv-${Date.now()}-${i}`,
+            employeeId: `EMP-${i}`,
+            name: cols[nameIdx] || 'Tanpa Nama',
+            location: (cols[locIdx] as any) || 'TBM',
+            date: cols[dateIdx] || new Date().toISOString().split('T')[0],
+            status: (cols[statusIdx] as any) || 'Hadir',
+            timeIn: '08:00',
+            timeOut: '17:00',
             createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            updatedBy: cols[10] || 'Import CSV Offline',
-          };
-          importedRecords.push(record);
+            updatedBy: 'CSV Import',
+          });
         }
 
-        if (importedRecords.length > 0) {
-          onImportCSV(importedRecords);
-          setSyncStatus(`Berhasil mengimpor ${importedRecords.length} data presensi dari file CSV!`);
+        if (parsedRecords.length > 0) {
+          onImportCSV(parsedRecords);
+          setSyncStatus(`Berhasil mengimpor ${parsedRecords.length} data dari file CSV!`);
         } else {
-          setSyncStatus('Format CSV tidak dapat dibaca atau baris data tidak valid.');
+          setSyncStatus('Gagal memproses baris data CSV.');
         }
       } catch (err: any) {
         setSyncStatus(`Gagal membaca file CSV: ${err.message}`);
@@ -128,9 +174,9 @@ export const GoogleSheetsSyncModal: React.FC<GoogleSheetsSyncModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-      <div className="bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)] rounded-[28px] border border-[var(--md-sys-color-outline-variant)] shadow-xl w-full max-w-xl overflow-hidden animate-in fade-in zoom-in duration-200">
-        {/* Header */}
-        <div className="p-6 border-b border-[var(--md-sys-color-outline-variant)] flex items-center justify-between">
+      <div className="bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)] rounded-[28px] border border-[var(--md-sys-color-outline-variant)] shadow-xl w-full max-w-xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
+        {/* Header Bar */}
+        <div className="p-5 sm:p-6 border-b border-[var(--md-sys-color-outline-variant)] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-2xl bg-emerald-100 text-emerald-800">
               <FileSpreadsheet className="w-6 h-6 text-emerald-700" />
@@ -152,35 +198,112 @@ export const GoogleSheetsSyncModal: React.FC<GoogleSheetsSyncModalProps> = ({
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
-          {/* External Link Card */}
-          <div className="p-4 bg-[var(--md-sys-color-surface-container-lowest)] rounded-2xl border border-[var(--md-sys-color-outline-variant)] flex items-center justify-between gap-3">
-            <div>
-              <div className="text-xs font-bold text-[var(--md-sys-color-on-surface)]">
-                Spreadsheet Utama KC Sulutgo
+        {/* Content Area */}
+        <div className="p-5 sm:p-6 space-y-4 overflow-y-auto flex-1">
+          {/* Card Google Spreadsheet Link & Custom URL Form */}
+          <div className="p-4 bg-[var(--md-sys-color-surface-container-lowest)] rounded-2xl border border-[var(--md-sys-color-outline-variant)] space-y-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-bold text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
+                  <span>Spreadsheet Utama KC Sulutgo</span>
+                  {sheetUrl !== DEFAULT_SPREADSHEET_URL && (
+                    <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-semibold">
+                      Custom Link
+                    </span>
+                  )}
+                </div>
+                <div className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] truncate mt-0.5 font-mono">
+                  {sheetUrl}
+                </div>
               </div>
-              <div className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] truncate max-w-md">
-                {sheetUrl}
+
+              {/* Positioned Action Buttons: Buka Sheet & Ganti Link */}
+              <div className="flex items-center gap-2 shrink-0">
+                <a
+                  href={sheetUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="m3-btn-outlined text-xs py-1.5 px-3 flex items-center gap-1.5 rounded-full hover:bg-[var(--md-sys-color-surface-container-highest)] text-blue-700 border-blue-200"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Buka Sheet</span>
+                </a>
+                <button
+                  onClick={() => setIsEditingUrl(!isEditingUrl)}
+                  className="p-2 rounded-full text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-high)] transition-colors"
+                  title="Ganti Link Spreadsheet & API Web App"
+                >
+                  <Settings className="w-4 h-4" />
+                </button>
               </div>
             </div>
-            <a
-              href={sheetUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="m3-btn-tonal text-xs py-1.5 px-3.5 shrink-0"
-            >
-              <span>Buka Sheet</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
+
+            {/* Form Ganti Link Spreadsheet / API */}
+            {isEditingUrl && (
+              <div className="pt-3 border-t border-[var(--md-sys-color-outline-variant)] space-y-3 animate-in fade-in duration-150">
+                <div>
+                  <label className="block text-[11px] font-semibold text-[var(--md-sys-color-on-surface-variant)] mb-1">
+                    URL Google Spreadsheet:
+                  </label>
+                  <input
+                    type="url"
+                    value={inputSheetUrl}
+                    onChange={(e) => setInputSheetUrl(e.target.value)}
+                    placeholder="https://docs.google.com/spreadsheets/d/..."
+                    className="w-full text-xs px-3 py-2 rounded-xl border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container-low)] focus:outline-none focus:border-[var(--md-sys-color-primary)] font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-[var(--md-sys-color-on-surface-variant)] mb-1">
+                    URL Google Apps Script API (Web App Exec):
+                  </label>
+                  <input
+                    type="url"
+                    value={inputScriptUrl}
+                    onChange={(e) => setInputScriptUrl(e.target.value)}
+                    placeholder="https://script.google.com/macros/s/.../exec"
+                    className="w-full text-xs px-3 py-2 rounded-xl border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container-low)] focus:outline-none focus:border-[var(--md-sys-color-primary)] font-mono"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-1">
+                  <button
+                    onClick={handleResetDefault}
+                    className="m3-btn-tonal text-xs py-1.5 px-3 flex items-center gap-1 text-slate-700"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Reset Default</span>
+                  </button>
+                  <button
+                    onClick={handleSaveLink}
+                    className="m3-btn-filled text-xs py-1.5 px-3.5 flex items-center gap-1"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Simpan Link</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {urlSaveStatus && (
+              <div className="p-2.5 bg-emerald-50 text-emerald-800 rounded-xl border border-emerald-200 text-xs font-semibold">
+                {urlSaveStatus}
+              </div>
+            )}
           </div>
 
           {/* Sync Trigger Action */}
           <div className="p-4 bg-[var(--md-sys-color-surface-container-low)] rounded-2xl border border-[var(--md-sys-color-outline-variant)] space-y-3">
             <div className="flex items-center justify-between">
-              <h4 className="text-xs font-bold text-[var(--md-sys-color-on-surface)]">
-                Tarik Data Terbaru (Sync)
-              </h4>
+              <div>
+                <h4 className="text-xs font-bold text-[var(--md-sys-color-on-surface)]">
+                  Tarik Data Terbaru (Sync)
+                </h4>
+                <p className="text-[11px] text-[var(--md-sys-color-on-surface-variant)]">
+                  Ambil rekap absensi real-time dari 18 sheet cabang
+                </p>
+              </div>
               <button
                 onClick={handleFetchFromSheet}
                 disabled={isSyncing}
@@ -198,18 +321,19 @@ export const GoogleSheetsSyncModal: React.FC<GoogleSheetsSyncModalProps> = ({
             )}
           </div>
 
-          {/* Breakdown Sheet Tabs Info */}
+          {/* Breakdown Sheet Tabs Info (18 Sheet Cabang Resmi dengan Nama Lengkap Lokasi) */}
           <div>
             <h4 className="text-xs font-bold text-[var(--md-sys-color-on-surface)] mb-2">
               Daftar Tab Sheet Berdasarkan Kantor Cabang (18 Sheet Cabang Resmi)
             </h4>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-44 overflow-y-auto pr-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-1">
               {ALL_LOCATIONS.map((loc) => (
                 <div
                   key={loc}
-                  className="p-2.5 bg-[var(--md-sys-color-surface-container-lowest)] rounded-xl border border-[var(--md-sys-color-outline-variant)] text-xs font-medium text-[var(--md-sys-color-on-surface)]"
+                  className="p-2.5 bg-[var(--md-sys-color-surface-container-lowest)] rounded-xl border border-[var(--md-sys-color-outline-variant)] text-xs font-medium text-[var(--md-sys-color-on-surface)] flex items-center justify-between gap-1.5"
                 >
-                  <span className="font-bold text-[var(--md-sys-color-primary)]">{loc}</span>: {LOCATION_NAMES[loc]}
+                  <span className="font-bold text-[var(--md-sys-color-primary)] shrink-0">{loc}:</span>
+                  <span className="truncate text-right opacity-90">{LOCATION_FULL_NAMES[loc]}</span>
                 </div>
               ))}
             </div>

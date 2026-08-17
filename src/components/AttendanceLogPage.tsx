@@ -37,7 +37,7 @@ export const AttendanceLogPage: React.FC<AttendanceLogPageProps> = ({
             className="m3-btn-filled text-xs py-2.5 px-4 shrink-0 flex items-center justify-center gap-2 cursor-pointer shadow-xs"
           >
             <PlusCircle className="w-4 h-4" />
-            <span>Input Presensi Baru</span>
+            <span>Tambah Presensi</span>
           </button>
         )}
       </div>

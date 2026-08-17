@@ -336,9 +336,9 @@ export function App() {
                 <span>Dashboard</span>
                 <span>/</span>
                 <span className="text-[var(--md-sys-color-on-surface-variant)] font-bold">
-                  {currentPage === 'dashboard' && 'Beranda Utama'}
-                  {currentPage === 'logs' && 'Riwayat Absensi'}
-                  {currentPage === 'analytics' && 'Bandingkan Cabang'}
+                  {currentPage === 'dashboard' && 'Dashboard'}
+                  {currentPage === 'logs' && 'Riwayat Data'}
+                  {currentPage === 'analytics' && 'Perbandingan Cabang'}
                 </span>
               </div>
               <h1 className="text-base font-extrabold text-[var(--md-sys-color-on-surface)] tracking-tight leading-tight">

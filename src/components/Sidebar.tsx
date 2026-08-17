@@ -46,19 +46,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const navItems = [
     {
       id: 'dashboard' as PageView,
-      label: 'Dashboard Utama',
+      label: 'Dashboard',
       icon: LayoutDashboard,
       desc: 'Ringkasan & Statistik',
     },
     {
       id: 'logs' as PageView,
-      label: 'Log Presensi Detail',
+      label: 'Riwayat Data',
       icon: ClipboardList,
       desc: 'Tabel Rekap & Filter',
     },
     {
       id: 'analytics' as PageView,
-      label: 'Analisis Per Lokasi',
+      label: 'Perbandingan Cabang',
       icon: BarChart3,
       desc: 'Kinerja Kantor Cabang',
     },
@@ -107,7 +107,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           className="w-full bg-[var(--md-sys-color-primary-container)] hover:bg-[#d8cffc] active:scale-[0.98] text-[var(--md-sys-color-on-primary-container)] font-medium text-xs py-3 px-4 rounded-2xl shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-2"
         >
           <PlusCircle className="w-4 h-4 text-[var(--md-sys-color-primary)]" />
-          <span>Input Presensi Baru</span>
+          <span>Tambah Presensi</span>
         </button>
       </div>
 
