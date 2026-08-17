@@ -46,154 +46,166 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const navItems = [
     {
       id: 'dashboard' as PageView,
-      label: 'Rangkuman Absen',
+      label: 'Dashboard Utama',
       icon: LayoutDashboard,
-      desc: 'Ringkasan & KPI Absensi',
+      desc: 'Ringkasan & Statistik',
     },
     {
       id: 'logs' as PageView,
-      label: 'Riwayat Absensi',
+      label: 'Log Presensi Detail',
       icon: ClipboardList,
-      desc: 'Data Absen Realtime',
+      desc: 'Tabel Rekap & Filter',
     },
     {
       id: 'analytics' as PageView,
-      label: 'Analisis Cabang',
+      label: 'Analisis Per Lokasi',
       icon: BarChart3,
-      desc: 'Bandingkan 18 Cabang',
+      desc: 'Kinerja Kantor Cabang',
     },
   ];
 
   const sidebarContent = (
-    <div className="h-full flex flex-col justify-between p-4 bg-gradient-to-br from-blue-50/50 via-white to-blue-50/30 border-r border-blue-100/60 text-slate-800 selection:bg-blue-500 selection:text-white">
-      <div>
-        {/* Brand Header with Logo */}
-        <div className="flex items-center justify-between pb-5 mb-5 border-b border-blue-100/50">
-          <div className="flex items-center gap-3.5 min-w-0">
-            <div className="w-14 h-14 rounded-2xl bg-white shadow-lg shadow-blue-500/10 flex items-center justify-center overflow-hidden border border-blue-100/50 shrink-0">
-              <img src={logoImg} alt="Logo" className="w-full h-full object-cover p-1.5" />
+    <div className="h-full bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] flex flex-col border-r border-[var(--md-sys-color-outline-variant)] shadow-sm select-none px-3 py-4">
+      {/* Header Brand */}
+      <div className="flex items-center justify-between pb-4 px-2 mb-2 border-b border-[var(--md-sys-color-outline-variant)]">
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <img
+              src={logoImg}
+              alt="Logo KC Sulutgo"
+              className="w-10 h-10 rounded-2xl object-cover ring-2 ring-[var(--md-sys-color-primary-container)] shadow-xs"
+            />
+            <div className="absolute -bottom-1 -right-1 bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] rounded-full p-0.5">
+              <Building2 className="w-2.5 h-2.5" />
             </div>
-            <div className="min-w-0">
-              <h2 className="text-base font-extrabold text-slate-900 tracking-tight leading-tight">KC SulutGoTengPa</h2>
-              <p className="text-xs font-semibold text-blue-600 mt-0.5 truncate">Monitoring Kehadiran</p>
-            </div>
           </div>
-          {/* Mobile Close */}
-          <button
-            onClick={onCloseMobile}
-            className="md:hidden p-1.5 rounded-lg hover:bg-blue-100/50 text-slate-400 hover:text-slate-600 transition-all shrink-0"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Quick Action Button */}
-        <div className="space-y-2 mb-6">
-          {(session.role === 'SUPERUSER' || session.role === 'LOCATION_ADMIN') && (
-            <button
-              onClick={() => {
-                onOpenAddModal();
-                onCloseMobile();
-              }}
-              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold text-sm shadow-lg shadow-blue-500/30 transition-all flex items-center justify-center gap-2 group"
-            >
-              <PlusCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              <span>Tambah Absen Baru</span>
-            </button>
-          )}
-
-          <div className="grid grid-cols-2 gap-1.5 pt-1">
-            <button
-              onClick={() => {
-                onOpenSyncModal();
-                onCloseMobile();
-              }}
-              className="py-2 px-2.5 rounded-lg bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-700 text-[11px] font-medium border border-blue-100 transition-all flex items-center justify-center gap-1.5"
-            >
-              <RefreshCw className="w-3.5 h-3.5 text-blue-600" />
-              Sinkron Database
-            </button>
-            <button
-              onClick={() => {
-                onExportCSV();
-                onCloseMobile();
-              }}
-              className="py-2 px-2.5 rounded-lg bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-700 text-[11px] font-medium border border-blue-100 transition-all flex items-center justify-center gap-1.5"
-            >
-              <Download className="w-3.5 h-3.5 text-blue-600" />
-              Download
-            </button>
+          <div>
+            <h1 className="font-bold text-sm text-[var(--md-sys-color-on-surface)] tracking-tight leading-none">
+              KC Sulutgotengpa
+            </h1>
+            <p className="text-[11px] font-medium text-[var(--md-sys-color-on-surface-variant)] mt-1 flex items-center gap-1">
+              <span>Sistem Absensi Office</span>
+            </p>
           </div>
         </div>
-
-        {/* Navigation Items */}
-        <div className="space-y-1">
-          <div className="px-2 pb-1.5 text-[10px] font-semibold text-blue-400 uppercase tracking-wider">
-            Menu Navigasi
-          </div>
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = currentPage === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => {
-                  onSelectPage(item.id);
-                  onCloseMobile();
-                }}
-                className={`w-full text-left px-4 py-3 rounded-xl transition-all flex items-center gap-3 relative ${
-                  isActive
-                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold shadow-lg shadow-blue-500/20'
-                    : 'text-slate-600 hover:bg-blue-50/50 hover:text-blue-700 font-medium'
-                }`}
-              >
-                {isActive && (
-                  <motion.div
-                    layoutId="activePill"
-                    className="absolute left-0 top-1.5 bottom-1.5 w-1 bg-white rounded-r-full"
-                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                  />
-                )}
-                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-blue-400'}`} />
-                <div className="min-w-0">
-                  <div className={`text-xs leading-none ${isActive ? 'font-medium' : 'font-medium'}`}>{item.label}</div>
-                  <div className={`text-[10px] mt-0.5 truncate ${isActive ? 'text-blue-100' : 'text-slate-400'}`}>
-                    {item.desc}
-                  </div>
-                </div>
-              </button>
-            );
-          })}
-        </div>
+        {/* Mobile close button */}
+        <button
+          onClick={onCloseMobile}
+          className="md:hidden p-2 text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-high)] rounded-full transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
 
-      {/* User Profile Card & Footer Actions */}
-      <div className="space-y-3 pt-4 border-t border-blue-100/50">
-        <div className="p-3 rounded-xl bg-gradient-to-br from-blue-50 to-white border border-blue-100/70">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] font-semibold tracking-wider px-2 py-0.5 rounded-md bg-blue-600 text-white border-none">
-              {session.role === 'SUPERUSER' ? 'Superuser' : 'Admin Cabang'}
-            </span>
-            <Sparkles className="w-3.5 h-3.5 text-blue-500" />
-          </div>
-          <p className="text-xs font-semibold text-slate-900 truncate">{session.name}</p>
-          <p className="text-[11px] text-slate-500 truncate">{session.email}</p>
-          {session.role === 'LOCATION_ADMIN' && (
-            <div className="flex items-center gap-1.5 text-[11px] font-medium text-blue-700 pt-1.5 mt-1.5 border-t border-blue-100/60">
-              <Building2 className="w-3.5 h-3.5 text-blue-600" />
-              <span className="truncate">{session.assignedLocation}</span>
-            </div>
-          )}
+      {/* M3 Extended Action FAB / Primary Action */}
+      <div className="px-1 mb-4">
+        <button
+          onClick={() => {
+            onOpenAddModal();
+            onCloseMobile();
+          }}
+          className="w-full bg-[var(--md-sys-color-primary-container)] hover:bg-[#d8cffc] active:scale-[0.98] text-[var(--md-sys-color-on-primary-container)] font-medium text-xs py-3 px-4 rounded-2xl shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-2"
+        >
+          <PlusCircle className="w-4 h-4 text-[var(--md-sys-color-primary)]" />
+          <span>Input Presensi Baru</span>
+        </button>
+      </div>
+
+      {/* Navigation Items - M3 Pill Drawers */}
+      <div className="flex-1 space-y-1.5 px-1 overflow-y-auto">
+        <div className="px-3 py-1 text-[11px] font-semibold tracking-wider text-[var(--md-sys-color-primary)] uppercase">
+          Menu Navigasi
+        </div>
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = currentPage === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => {
+                onSelectPage(item.id);
+                onCloseMobile();
+              }}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-full text-xs font-medium transition-all duration-200 ${
+                isActive
+                  ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] font-semibold shadow-xs'
+                  : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-high)] hover:text-[var(--md-sys-color-on-surface)]'
+              }`}
+            >
+              <Icon className={`w-4 h-4 ${isActive ? 'text-[var(--md-sys-color-primary)]' : 'opacity-70'}`} />
+              <div className="text-left leading-tight">
+                <div className="text-xs">{item.label}</div>
+                <div className={`text-[10px] opacity-70 ${isActive ? 'text-[var(--md-sys-color-on-secondary-container)]' : ''}`}>
+                  {item.desc}
+                </div>
+              </div>
+            </button>
+          );
+        })}
+
+        {/* Quick Tools Header */}
+        <div className="pt-4 px-3 py-1 text-[11px] font-semibold tracking-wider text-[var(--md-sys-color-primary)] uppercase">
+          Aksi Cepat Data
         </div>
 
-        <div className="space-y-1">
-          <button
-            onClick={onLogout}
-            className="w-full py-2 px-2.5 rounded-lg hover:bg-rose-50 text-rose-600 font-medium text-xs flex items-center gap-2 transition-colors"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>Logout</span>
-          </button>
+        <button
+          onClick={() => {
+            onOpenSyncModal();
+            onCloseMobile();
+          }}
+          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-full text-xs font-medium text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-high)] hover:text-[var(--md-sys-color-on-surface)] transition-all"
+        >
+          <Sparkles className="w-4 h-4 text-amber-500" />
+          <span>Sync Google Sheets</span>
+        </button>
+
+        <button
+          onClick={() => {
+            onExportCSV();
+            onCloseMobile();
+          }}
+          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-full text-xs font-medium text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-high)] hover:text-[var(--md-sys-color-on-surface)] transition-all"
+        >
+          <Download className="w-4 h-4 text-emerald-600" />
+          <span>Export CSV</span>
+        </button>
+
+        <button
+          onClick={() => {
+            onResetData();
+            onCloseMobile();
+          }}
+          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-full text-xs font-medium text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-error-container)] hover:text-[var(--md-sys-color-on-error-container)] transition-all"
+        >
+          <RefreshCw className="w-4 h-4 text-rose-500" />
+          <span>Reset Google Sheets</span>
+        </button>
+      </div>
+
+      {/* User Session Footer (M3 Elevated Surface Container High) */}
+      <div className="pt-3 border-t border-[var(--md-sys-color-outline-variant)]">
+        <div className="bg-[var(--md-sys-color-surface-container-high)] p-3 rounded-2xl mb-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center font-bold text-xs">
+                {session.role === 'SUPERUSER' ? 'SU' : 'AD'}
+              </div>
+              <div className="leading-tight">
+                <p className="text-xs font-bold text-[var(--md-sys-color-on-surface)]">{session.name}</p>
+                <p className="text-[10px] font-medium text-[var(--md-sys-color-on-surface-variant)] capitalize flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3 text-emerald-600 inline" />
+                  {session.role === 'SUPERUSER' ? 'Superuser Mode' : 'Admin Cabang'}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onLogout}
+              title="Logout"
+              className="p-2 text-rose-600 hover:bg-[var(--md-sys-color-error-container)] rounded-full transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -215,7 +227,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={onCloseMobile}
-              className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs"
+              className="fixed inset-0 bg-black/40 backdrop-blur-xs"
             />
             <motion.div
               initial={{ x: '-100%' }}

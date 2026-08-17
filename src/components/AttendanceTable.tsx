@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import {
   Search,
-  Filter,
   CheckCircle2,
   Clock,
   HeartPulse,
@@ -9,13 +8,13 @@ import {
   ChevronLeft,
   ChevronRight,
   Edit2,
-  FileText,
   Stethoscope,
   Plane,
   AlertCircle,
-  ChevronDown,
+  X,
 } from 'lucide-react';
 import type { AttendanceRecord, AttendanceStatus } from '../types/attendance';
+import { LOCATION_NAMES } from '../types/attendance';
 import { DateField } from './ui/date-field';
 
 interface AttendanceTableProps {
@@ -26,62 +25,61 @@ interface AttendanceTableProps {
 
 const STATUS_BADGES: Record<AttendanceStatus, { bg: string; text: string; dot: string; icon: React.ReactNode }> = {
   Hadir: {
-    bg: 'bg-emerald-50 border-emerald-200/70',
-    text: 'text-emerald-700',
-    dot: 'bg-emerald-500',
-    icon: <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />,
+    bg: 'bg-emerald-100 border border-emerald-300',
+    text: 'text-emerald-900 font-bold',
+    dot: 'bg-emerald-600',
+    icon: <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />,
   },
   Sakit: {
-    bg: 'bg-blue-50 border-blue-200/70',
-    text: 'text-blue-700',
-    dot: 'bg-blue-500',
-    icon: <HeartPulse className="w-3.5 h-3.5 text-blue-600" />,
+    bg: 'bg-sky-100 border border-sky-300',
+    text: 'text-sky-900 font-bold',
+    dot: 'bg-sky-600',
+    icon: <HeartPulse className="w-3.5 h-3.5 text-sky-700" />,
   },
   SKD: {
-    bg: 'bg-sky-50 border-sky-200/70',
-    text: 'text-sky-700',
-    dot: 'bg-sky-500',
-    icon: <Stethoscope className="w-3.5 h-3.5 text-sky-600" />,
+    bg: 'bg-indigo-100 border border-indigo-300',
+    text: 'text-indigo-900 font-bold',
+    dot: 'bg-indigo-600',
+    icon: <Stethoscope className="w-3.5 h-3.5 text-indigo-700" />,
   },
   Izin: {
-    bg: 'bg-amber-50 border-amber-200/70',
-    text: 'text-amber-700',
-    dot: 'bg-amber-500',
-    icon: <Clock className="w-3.5 h-3.5 text-amber-600" />,
+    bg: 'bg-amber-100 border border-amber-300',
+    text: 'text-amber-900 font-bold',
+    dot: 'bg-amber-600',
+    icon: <Clock className="w-3.5 h-3.5 text-amber-700" />,
   },
   Terlambat: {
-    bg: 'bg-orange-50 border-orange-200/70',
-    text: 'text-orange-700',
-    dot: 'bg-orange-500',
-    icon: <AlertCircle className="w-3.5 h-3.5 text-orange-600" />,
+    bg: 'bg-orange-100 border border-orange-300',
+    text: 'text-orange-900 font-bold',
+    dot: 'bg-orange-600',
+    icon: <AlertCircle className="w-3.5 h-3.5 text-orange-700" />,
   },
   Alpa: {
-    bg: 'bg-rose-50 border-rose-200/70',
-    text: 'text-rose-700',
-    dot: 'bg-rose-500',
-    icon: <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />,
+    bg: 'bg-rose-100 border border-rose-300',
+    text: 'text-rose-900 font-bold',
+    dot: 'bg-rose-600',
+    icon: <AlertTriangle className="w-3.5 h-3.5 text-rose-700" />,
   },
   Cuti: {
-    bg: 'bg-purple-50 border-purple-200/70',
-    text: 'text-purple-700',
-    dot: 'bg-purple-500',
-    icon: <Plane className="w-3.5 h-3.5 text-purple-600" />,
+    bg: 'bg-purple-100 border border-purple-300',
+    text: 'text-purple-900 font-bold',
+    dot: 'bg-purple-600',
+    icon: <Plane className="w-3.5 h-3.5 text-purple-700" />,
   },
   Off: {
-    bg: 'bg-slate-100 border-slate-200',
-    text: 'text-slate-600',
-    dot: 'bg-slate-400',
-    icon: <Clock className="w-3.5 h-3.5 text-slate-400" />,
+    bg: 'bg-slate-100 border border-slate-300',
+    text: 'text-slate-700 font-bold',
+    dot: 'bg-slate-500',
+    icon: <Clock className="w-3.5 h-3.5 text-slate-500" />,
   },
 };
 
-// Position color helper
 const getPositionColor = (position: string = '') => {
   const posUpper = position.toUpperCase();
-  if (posUpper.includes('LEADER')) return 'text-emerald-600 font-semibold';
-  if (posUpper.includes('ADMIN')) return 'text-blue-600 font-semibold';
-  if (posUpper.includes('SPP') || posUpper.includes('SPL')) return 'text-rose-600 font-semibold';
-  return 'text-slate-400';
+  if (posUpper.includes('LEADER')) return 'text-emerald-700 font-semibold';
+  if (posUpper.includes('ADMIN')) return 'text-blue-700 font-semibold';
+  if (posUpper.includes('SPP') || posUpper.includes('SPL')) return 'text-rose-700 font-semibold';
+  return 'text-[var(--md-sys-color-on-surface-variant)]';
 };
 
 export const AttendanceTable: React.FC<AttendanceTableProps> = ({
@@ -97,10 +95,11 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
 
   const filteredRecords = useMemo(() => {
     return records.filter((r) => {
+      const locName = LOCATION_NAMES[r.location] || r.location;
       const matchesSearch =
         r.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         r.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        r.location.toLowerCase().includes(searchTerm.toLowerCase());
+        locName.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesStatus = statusFilter === 'ALL' || r.status === statusFilter;
       const matchesDate = !dateFilter || r.date === dateFilter;
@@ -115,158 +114,151 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
     return filteredRecords.slice(start, start + pageSize);
   }, [filteredRecords, currentPage]);
 
+  const statuses: (AttendanceStatus | 'ALL')[] = ['ALL', 'Hadir', 'Izin', 'Sakit', 'Terlambat', 'Alpa', 'Cuti', 'Off'];
+
   return (
-    <div className="bg-white rounded-2xl shadow-lg shadow-slate-200/60 border border-slate-200/60 overflow-hidden mb-6 min-w-0 max-w-full">
-      {/* Header Controls */}
-      <div className="p-4 sm:p-5 border-b border-blue-100/50 bg-gradient-to-r from-blue-50/30 to-transparent flex flex-col md:flex-row md:items-center justify-between gap-3 w-full min-w-0 max-w-full">
+    <div className="bg-[var(--md-sys-color-surface-container-lowest)] rounded-2xl border border-[var(--md-sys-color-outline-variant)] shadow-xs overflow-hidden mb-6 min-w-0 max-w-full">
+      {/* M3 Header Controls & Search Bar */}
+      <div className="p-4 sm:p-5 border-b border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container-low)] flex flex-col md:flex-row md:items-center justify-between gap-4 w-full">
         <div>
-          <h3 className="font-bold text-slate-900 text-base tracking-tight">
-            Detail Absen Karyawan
+          <h3 className="font-bold text-[var(--md-sys-color-on-surface)] text-base tracking-tight">
+            Detail Log Absen Karyawan
           </h3>
-          <p className="text-xs text-slate-500 font-medium mt-1">
-            Menampilkan {filteredRecords.length} dari {records.length} data absen
+          <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] mt-0.5">
+            Menampilkan <strong className="font-semibold text-[var(--md-sys-color-primary)]">{filteredRecords.length}</strong> entri terkualifikasi
           </p>
         </div>
 
-        {/* Filter Toolbar */}
-        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-          {/* Search Field */}
-          <div className="relative w-full sm:w-auto">
-            <Search className="w-3.5 h-3.5 text-blue-400 absolute left-3 top-1/2 -translate-y-1/2" />
+        {/* Search Input & Date Picker Pill */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          <div className="relative flex-1 sm:w-64">
+            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--md-sys-color-on-surface-variant)]" />
             <input
               type="text"
-              placeholder="Cari nama atau NIP/NBM..."
+              placeholder="Cari nama, NIK, lokasi..."
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              className="pl-8 text-xs py-1.5 w-full sm:w-48 border border-blue-100 bg-blue-50/30 rounded-lg focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 outline-none transition-all text-slate-700 placeholder:text-blue-400/60"
+              className="w-full bg-[var(--md-sys-color-surface-container-highest)] text-xs text-[var(--md-sys-color-on-surface)] placeholder-[var(--md-sys-color-on-surface-variant)] pl-9 pr-8 py-2 rounded-full border border-[var(--md-sys-color-outline-variant)] focus:outline-hidden focus:border-[var(--md-sys-color-primary)] focus:ring-2 focus:ring-[var(--md-sys-color-primary)]/20 transition-all"
             />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--md-sys-color-on-surface-variant)] hover:text-[var(--md-sys-color-on-surface)]"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
 
-          {/* Status Dropdown */}
-          <div className="relative">
-            <Filter className="w-3.5 h-3.5 text-blue-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value as any);
-                setCurrentPage(1);
-              }}
-              className="w-full sm:w-auto pl-11 pr-11 py-1.5 text-xs appearance-none cursor-pointer border border-blue-100 bg-blue-50/30 rounded-lg focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 outline-none transition-all text-slate-700"
-            >
-              <option value="ALL">Semua Status Absen</option>
-              <option value="Hadir">Hadir</option>
-              <option value="Izin">Izin</option>
-              <option value="Sakit">Sakit</option>
-              <option value="SKD">SKD (Dokter)</option>
-              <option value="Terlambat">Terlambat</option>
-              <option value="Alpa">Alpa</option>
-              <option value="Cuti">Cuti</option>
-              <option value="Off">Off</option>
-            </select>
-            <ChevronDown className="w-4 h-4 text-blue-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-          </div>
-
-          {/* Date Picker */}
-          <div className="flex items-center gap-2">
+          <div className="w-40">
             <DateField
               value={dateFilter}
-              onChange={(v) => {
-                setDateFilter(v);
+              onChange={(val) => {
+                setDateFilter(val);
                 setCurrentPage(1);
               }}
               placeholder="Filter Tanggal"
-              className="w-40 h-8 text-xs rounded-lg"
             />
           </div>
         </div>
       </div>
 
-      {/* Responsive Isolated Scroll Table Container */}
-      <div className="overflow-x-auto w-full max-w-full min-w-0">
-        <table className="w-full text-left text-xs min-w-[680px]">
-          <thead className="bg-gradient-to-r from-blue-50 to-blue-100/50 border-b border-blue-100/50 text-blue-700 uppercase tracking-wider text-[10px] font-semibold sticky top-0">
-            <tr>
-              <th className="px-4 py-3 w-[180px]">Nama Karyawan</th>
-              <th className="px-4 py-3 w-[100px]">Cabang</th>
-              <th className="px-4 py-3 w-[100px]">Tanggal</th>
-              <th className="px-4 py-3 w-[120px]">Status</th>
-              <th className="px-4 py-3 w-[200px]">Catatan / Alasan</th>
-              <th className="px-4 py-3 text-right w-[100px]">Aksi</th>
+      {/* M3 Horizontal Filter Chips (Pill Shapes) */}
+      <div className="px-4 py-3 bg-[var(--md-sys-color-surface-container-lowest)] border-b border-[var(--md-sys-color-outline-variant)] flex items-center gap-2 overflow-x-auto no-scrollbar">
+        <span className="text-xs font-semibold text-[var(--md-sys-color-on-surface-variant)] pr-1">
+          Status:
+        </span>
+        {statuses.map((st) => {
+          const isActive = statusFilter === st;
+          return (
+            <button
+              key={st}
+              onClick={() => {
+                setStatusFilter(st);
+                setCurrentPage(1);
+              }}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${
+                isActive
+                  ? 'bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] font-bold border border-[var(--md-sys-color-primary)] shadow-xs'
+                  : 'bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)] border border-transparent hover:bg-[var(--md-sys-color-surface-container-highest)] hover:text-[var(--md-sys-color-on-surface)]'
+              }`}
+            >
+              {st === 'ALL' ? 'Semua Status' : st}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Table Container */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr className="bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface-variant)] font-semibold border-b border-[var(--md-sys-color-outline-variant)]">
+              <th className="py-3 px-4">Tanggal</th>
+              <th className="py-3 px-4">Nama & NIK</th>
+              <th className="py-3 px-4">Jabatan</th>
+              <th className="py-3 px-4">Lokasi Office</th>
+              <th className="py-3 px-4">Status</th>
+              <th className="py-3 px-4">Keterangan</th>
+              {isEditable && <th className="py-3 px-4 text-center">Aksi</th>}
             </tr>
           </thead>
-          <tbody className="divide-y divide-blue-50/50">
+          <tbody className="divide-y divide-[var(--md-sys-color-outline-variant)]">
             {paginatedRecords.length > 0 ? (
               paginatedRecords.map((r) => {
-                const badge = STATUS_BADGES[r.status] || STATUS_BADGES.Hadir;
-
+                const badge = STATUS_BADGES[r.status] || STATUS_BADGES['Hadir'];
                 return (
-                  <tr key={r.id} className="hover:bg-blue-50/30 transition-colors">
-                    {/* Employee */}
-                    <td className="px-4 py-3.5">
-                      <div className="font-semibold text-slate-900 text-xs truncate">{r.name}</div>
-                      <div className={`text-[11px] font-mono mt-0.5 truncate ${getPositionColor(r.position)}`}>
-                        {r.employeeId} {r.position ? `• ${r.position}` : ''}
-                      </div>
-                    </td>
-
-                    {/* Location */}
-                    <td className="px-4 py-3.5">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-mono font-medium text-[11px] border border-slate-200/50">
-                        {r.location}
-                      </span>
-                    </td>
-
-                    {/* Date */}
-                    <td className="px-4 py-3.5 text-slate-600 font-mono text-[11px] whitespace-nowrap">
+                  <tr
+                    key={r.id}
+                    className="hover:bg-[var(--md-sys-color-surface-container-low)] transition-colors"
+                  >
+                    <td className="py-3 px-4 font-medium text-[var(--md-sys-color-on-surface)] whitespace-nowrap">
                       {r.date}
                     </td>
-
-                    {/* Status Badge */}
-                    <td className="px-4 py-3.5">
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-medium ${badge.bg} ${badge.text}`}
-                      >
+                    <td className="py-3 px-4">
+                      <div className="font-bold text-[var(--md-sys-color-on-surface)]">{r.name}</div>
+                      <div className="text-[10px] text-[var(--md-sys-color-on-surface-variant)] font-mono">{r.employeeId}</div>
+                    </td>
+                    <td className={`py-3 px-4 ${getPositionColor(r.position)}`}>
+                      {r.position || '-'}
+                    </td>
+                    <td className="py-3 px-4 font-medium text-[var(--md-sys-color-on-surface)]">
+                      {LOCATION_NAMES[r.location] || r.location}
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs ${badge.bg} ${badge.text}`}>
                         {badge.icon}
                         <span>{r.status}</span>
                       </span>
                     </td>
-
-                    {/* Notes */}
-                    <td className="px-4 py-3.5 text-slate-600 max-w-xs truncate">
-                      {r.notes ? (
-                        <div className="flex items-center gap-1.5 text-[11px]">
-                          <FileText className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                          <span className="truncate">{r.notes}</span>
-                        </div>
-                      ) : (
-                        <span className="text-slate-300 italic text-[11px]">-</span>
-                      )}
+                    <td className="py-3 px-4 text-[var(--md-sys-color-on-surface-variant)] max-w-xs truncate">
+                      {r.notes || '-'}
                     </td>
-
-                    {/* Action */}
-                    <td className="px-4 py-3.5 text-right">
-                      {isEditable ? (
+                    {isEditable && (
+                      <td className="py-3 px-4 text-center">
                         <button
                           onClick={() => onEditRecord(r)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-900 hover:text-white text-slate-700 text-[11px] font-medium transition-all cursor-pointer"
+                          title="Edit Presensi"
+                          className="p-1.5 text-[var(--md-sys-color-primary)] hover:bg-[var(--md-sys-color-primary-container)] rounded-full transition-colors"
                         >
-                          <Edit2 className="w-3 h-3" />
-                          <span>Edit</span>
+                          <Edit2 className="w-4 h-4" />
                         </button>
-                      ) : (
-                        <span className="text-slate-300 text-[10px] font-mono">ReadOnly</span>
-                      )}
-                    </td>
+                      </td>
+                    )}
                   </tr>
                 );
               })
             ) : (
               <tr>
-                <td colSpan={6} className="px-5 py-10 text-center text-slate-400 font-normal">
-                  Nggak ada riwayat absen yang cocok dengan filter.
+                <td
+                  colSpan={isEditable ? 7 : 6}
+                  className="py-8 text-center text-[var(--md-sys-color-on-surface-variant)]"
+                >
+                  <p className="text-sm font-medium">Tidak ada data presensi yang cocok dengan filter.</p>
+                  <p className="text-xs mt-1">Coba sesuaikan kata kunci pencarian atau filter status.</p>
                 </td>
               </tr>
             )}
@@ -274,25 +266,27 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
         </table>
       </div>
 
-      {/* Pagination Controls */}
-      <div className="p-3.5 border-t border-blue-100/50 flex items-center justify-between bg-gradient-to-r from-blue-50/30 to-transparent">
-        <span className="text-[11px] text-slate-600 font-medium">
-          Halaman <span className="font-semibold text-blue-700">{currentPage}</span> dari {totalPages}
+      {/* M3 Table Pagination Footer */}
+      <div className="p-3.5 border-t border-[var(--md-sys-color-outline-variant)] flex items-center justify-between bg-[var(--md-sys-color-surface-container-low)]">
+        <span className="text-xs text-[var(--md-sys-color-on-surface-variant)] font-medium">
+          Halaman <strong className="font-bold text-[var(--md-sys-color-primary)]">{currentPage}</strong> dari {totalPages}
         </span>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           <button
             disabled={currentPage === 1}
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            className="p-1.5 rounded-lg border border-blue-100 text-blue-600 hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all"
+            className="px-3 py-1.5 rounded-full border border-[var(--md-sys-color-outline-variant)] text-xs font-medium text-[var(--md-sys-color-primary)] hover:bg-[var(--md-sys-color-primary-container)] disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1"
           >
-            <ChevronLeft className="w-3.5 h-3.5" />
+            <ChevronLeft className="w-4 h-4" />
+            <span>Sebelumnya</span>
           </button>
           <button
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            className="p-1.5 rounded-lg border border-blue-100 text-blue-600 hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all"
+            className="px-3 py-1.5 rounded-full border border-[var(--md-sys-color-outline-variant)] text-xs font-medium text-[var(--md-sys-color-primary)] hover:bg-[var(--md-sys-color-primary-container)] disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1"
           >
-            <ChevronRight className="w-3.5 h-3.5" />
+            <span>Selanjutnya</span>
+            <ChevronRight className="w-4 h-4" />
           </button>
         </div>
       </div>

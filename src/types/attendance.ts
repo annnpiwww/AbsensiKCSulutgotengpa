@@ -28,25 +28,48 @@ export type LocationCode =
   | 'MGJY'
   | 'MGNS';
 
+/* Singkatan resmi nama lokasi (TBM, NBM, PBM, dll) */
 export const LOCATION_NAMES: Record<LocationCode, string> = {
-  TBM: 'TBM - Toko Bintang Manado',
-  NBM: 'NBM - New Bendar Manado',
-  PBM: 'PBM - Pasar Bersehati Manado',
-  PKM: 'PKM - Pasar Kalimas Manado',
-  PPM: 'PPM - Pesar Karombasan Manado',
-  MPP: 'MPP - Mall Pelayanan Publik ',
-  MGKB: 'MGKB - Mie Gacoan Kotamobagu',
-  MGAM: 'MGAM - Mie Gacoan AA Maramis',
-  MGMM: 'MGMM - Mie Gacoan AirMadidi',
-  MGNW: 'MGNW - Mie Gacoan Nani Wartabone',
-  MGTO: 'MGTO - Mie Gacoan Tomohon',
-  MGGJ: 'MGGJ - Mie Gacoan Gorontalo Jhon',
-  MGBP: 'MGBP - Mie Gacoan Bitung Palar',
-  MGLG: 'MGLG - Mie Gacoan Limboto GOrontalo',
-  MGMP: 'MGMP - Mie Gacoan Mangaraja Palu',
-  MGMK: 'MGMK - Mie Gacoan Mimika',
-  MGJY: 'MGJY - Mie Gacoan Jayapura',
-  MGNS: 'MGNS - Mie Gacoan Sorong',
+  TBM: 'TBM',
+  NBM: 'NBM',
+  PBM: 'PBM',
+  PKM: 'PKM',
+  PPM: 'PPM',
+  MPP: 'MPP',
+  MGKB: 'MGKB',
+  MGAM: 'MGAM',
+  MGMM: 'MGMM',
+  MGNW: 'MGNW',
+  MGTO: 'MGTO',
+  MGGJ: 'MGGJ',
+  MGBP: 'MGBP',
+  MGLG: 'MGLG',
+  MGMP: 'MGMP',
+  MGMK: 'MGMK',
+  MGJY: 'MGJY',
+  MGNS: 'MGNS',
+};
+
+/* Deskripsi lengkap lokasi untuk tooltip/detail */
+export const LOCATION_FULL_NAMES: Record<LocationCode, string> = {
+  TBM: 'Toko Bintang Manado',
+  NBM: 'New Bendar Manado',
+  PBM: 'Pasar Bersehati Manado',
+  PKM: 'Pasar Kalimas Manado',
+  PPM: 'Pesar Karombasan Manado',
+  MPP: 'Mall Pelayanan Publik',
+  MGKB: 'Mie Gacoan Kotamobagu',
+  MGAM: 'Mie Gacoan AA Maramis',
+  MGMM: 'Mie Gacoan AirMadidi',
+  MGNW: 'Mie Gacoan Nani Wartabone',
+  MGTO: 'Mie Gacoan Tomohon',
+  MGGJ: 'Mie Gacoan Gorontalo Jhon',
+  MGBP: 'Mie Gacoan Bitung Palar',
+  MGLG: 'Mie Gacoan Limboto GOrontalo',
+  MGMP: 'Mie Gacoan Mangaraja Palu',
+  MGMK: 'Mie Gacoan Mimika',
+  MGJY: 'Mie Gacoan Jayapura',
+  MGNS: 'Mie Gacoan Sorong',
 };
 
 export const ALL_LOCATIONS: LocationCode[] = [

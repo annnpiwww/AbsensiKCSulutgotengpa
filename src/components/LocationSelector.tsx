@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MapPin, Lock, ChevronDown, Building2, Check } from 'lucide-react';
-import { LocationCode, ALL_LOCATIONS, LOCATION_NAMES, UserSession } from '../types/attendance';
+import { LocationCode, ALL_LOCATIONS, LOCATION_NAMES, LOCATION_FULL_NAMES, UserSession } from '../types/attendance';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 
 interface LocationSelectorProps {
@@ -22,107 +22,103 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
   useEffect(() => {
     if (open) {
       setQuery('');
-      // Focus search on open
-      requestAnimationFrame(() => searchRef.current?.focus());
+      setTimeout(() => searchRef.current?.focus(), 100);
     }
   }, [open]);
 
-  const displayLabel =
-    selectedLocation === 'ALL'
-      ? 'Semua Cabang (Gabungan)'
-      : `${selectedLocation} - ${LOCATION_NAMES[selectedLocation]}`;
-
-  const filtered = [
-    { value: 'ALL' as LocationCode | 'ALL', label: '🌐 Semua Cabang (Gabungan)' },
+  const options: Array<{ value: LocationCode | 'ALL'; label: string }> = [
+    { value: 'ALL', label: 'Semua Lokasi Office (Sulutgo)' },
     ...ALL_LOCATIONS.map((loc) => ({
       value: loc,
-      label: `🏢 ${LOCATION_NAMES[loc]}`,
+      label: `${loc} - ${LOCATION_FULL_NAMES[loc] || loc}`,
     })),
-  ].filter((opt) =>
+  ];
+
+  const currentLabel =
+    selectedLocation === 'ALL'
+      ? 'Semua Lokasi Office (Sulutgo)'
+      : `${selectedLocation} (${LOCATION_FULL_NAMES[selectedLocation as LocationCode] || selectedLocation})`;
+
+  const filteredOptions = options.filter((opt) =>
     opt.label.toLowerCase().includes(query.toLowerCase())
   );
 
   return (
-    <div className="bento-card p-3.5 sm:p-4 rounded-xl border border-slate-200/80 bg-white shadow-2xs min-w-0 max-w-full">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-        {/* Title & Context */}
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="p-2 rounded-lg bg-blue-50 text-blue-600 border border-blue-100/80 shrink-0">
-            <Building2 className="w-4 h-4" />
+    <div className="bg-[var(--md-sys-color-surface-container-lowest)] p-4 rounded-2xl border border-[var(--md-sys-color-outline-variant)] shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2.5 rounded-2xl bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]">
+            <Building2 className="w-4 h-4 text-[var(--md-sys-color-primary)]" />
           </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-                Lokasi Cabang Operational
-              </h3>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100 shrink-0">
-                18 Unit Cabang
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500 font-medium mt-0.5 truncate">
-              Pilih cabang tertentu atau lihat data gabungan
+          <div>
+            <h4 className="text-xs font-bold text-[var(--md-sys-color-on-surface)]">
+              Lokasi Kerja & Kantor Cabang
+            </h4>
+            <p className="text-[11px] text-[var(--md-sys-color-on-surface-variant)]">
+              {isSuperuser
+                ? 'Mode Admin/Superuser: Akses seluruh kantor cabang'
+                : `Terunci pada lokasi penugasan: ${session.assignedLocation || 'Utama'}`}
             </p>
           </div>
         </div>
 
-        {/* Dropdown */}
-        <div className="flex items-center gap-2 w-full lg:w-auto">
-          {!isSuperuser && (
-            <div className="flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-50 px-2.5 py-1.5 rounded-lg border border-amber-200/60 shrink-0">
-              <Lock className="w-3.5 h-3.5" />
-              <span className="truncate">Akses: {session.assignedLocation}</span>
-            </div>
-          )}
-
+        {/* Location Dropdown / Lock Badge */}
+        <div className="w-full sm:w-72">
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
               <button
                 type="button"
                 disabled={!isSuperuser}
-                className="relative w-full lg:w-80 flex items-center gap-2 pl-10 pr-10 py-2 bg-slate-50 hover:bg-slate-100/80 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed transition-all text-left"
+                className="w-full flex items-center justify-between gap-2 px-4 py-2.5 rounded-full bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline-variant)] hover:border-[var(--md-sys-color-primary)] text-xs text-[var(--md-sys-color-on-surface)] transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-75"
               >
-                <MapPin className="w-4 h-4 text-slate-400 absolute left-3.5 shrink-0" />
-                <span className="truncate">{displayLabel}</span>
-                <ChevronDown className="w-4 h-4 text-slate-400 ml-auto shrink-0" />
+                <div className="flex items-center gap-2 truncate">
+                  <MapPin className="w-4 h-4 text-[var(--md-sys-color-primary)] shrink-0" />
+                  <span className="truncate font-semibold">{currentLabel}</span>
+                </div>
+                {isSuperuser ? (
+                  <ChevronDown className="w-4 h-4 text-[var(--md-sys-color-on-surface-variant)] shrink-0" />
+                ) : (
+                  <Lock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                )}
               </button>
             </PopoverTrigger>
+
             <PopoverContent
-              className="w-[var(--radix-popover-trigger-width)] max-h-80 p-0 overflow-hidden"
-              align="start"
+              align="end"
+              className="w-72 p-2 bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)] rounded-2xl border border-[var(--md-sys-color-outline-variant)] shadow-lg z-50"
             >
-              <div className="p-2 border-b border-slate-100">
-                <input
-                  ref={searchRef}
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Cari cabang..."
-                  className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none text-slate-700 placeholder:text-slate-400"
-                />
-              </div>
-              <div className="max-h-64 overflow-y-auto p-1">
-                {filtered.length === 0 ? (
-                  <div className="px-3 py-6 text-center text-xs text-slate-400">
-                    Tidak ada cabang yang cocok
+              <input
+                ref={searchRef}
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Cari lokasi kantor..."
+                className="w-full mb-2 bg-[var(--md-sys-color-surface-container-lowest)] text-xs text-[var(--md-sys-color-on-surface)] placeholder-[var(--md-sys-color-on-surface-variant)] px-3 py-2 rounded-xl border border-[var(--md-sys-color-outline-variant)] focus:border-[var(--md-sys-color-primary)] focus:outline-hidden"
+              />
+
+              <div className="max-h-60 overflow-y-auto space-y-1">
+                {filteredOptions.length === 0 ? (
+                  <div className="py-4 text-center text-xs text-[var(--md-sys-color-on-surface-variant)]">
+                    Lokasi tidak ditemukan
                   </div>
                 ) : (
-                  filtered.map((opt) => {
+                  filteredOptions.map((opt) => {
                     const active = selectedLocation === opt.value;
                     return (
                       <button
                         key={opt.value}
-                        type="button"
                         onClick={() => {
                           onSelectLocation(opt.value);
                           setOpen(false);
                         }}
-                        className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-xs font-medium text-left transition-colors cursor-pointer ${
+                        className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-full text-xs font-medium text-left transition-colors cursor-pointer ${
                           active
-                            ? 'bg-blue-50 text-blue-700'
-                            : 'text-slate-700 hover:bg-slate-50'
+                            ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] font-bold'
+                            : 'text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-highest)] hover:text-[var(--md-sys-color-on-surface)]'
                         }`}
                       >
                         <span className="truncate">{opt.label}</span>
-                        {active && <Check className="w-3.5 h-3.5 text-blue-600 shrink-0" />}
+                        {active && <Check className="w-3.5 h-3.5 text-[var(--md-sys-color-primary)] shrink-0" />}
                       </button>
                     );
                   })

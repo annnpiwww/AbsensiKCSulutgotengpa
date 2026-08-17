@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ModernLogin } from './components/ui/modern-login';
 import { Sidebar, PageView } from './components/Sidebar';
 import { DateRangePicker, DateFilterPreset } from './components/DateRangePicker';
@@ -11,6 +12,7 @@ import { AttendanceLogPage } from './components/AttendanceLogPage';
 import { LocationAnalyticsPage } from './components/LocationAnalyticsPage';
 import { AddAttendanceModal } from './components/AddAttendanceModal';
 import { GoogleSheetsSyncModal } from './components/GoogleSheetsSyncModal';
+import { KpiSkeletonGrid, TableSkeleton, AnalyticsSkeleton } from './components/SkeletonLoader';
 import type { AttendanceRecord, LocationCode, UserSession } from './types/attendance';
 import { LOCATION_NAMES } from './types/attendance';
 import { AttendanceService } from './services/attendanceStore';
@@ -286,48 +288,48 @@ export function App() {
         onResetData={handleResetData}
       />
 
-      {/* Main Content Area */}
-      <div className="flex-1 md:ml-64 min-h-screen flex flex-col min-w-0 max-w-full overflow-x-hidden bg-gradient-to-br from-blue-50/30 via-white to-blue-50/20">
-        {/* Top Header Bar */}
-        <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-xl border-b border-blue-100/60 px-4 sm:px-6 py-4 flex items-center justify-between shadow-sm w-full max-w-full">
+      {/* Main Content Area - M3 Surface Canvas */}
+      <div className="flex-1 md:ml-64 min-h-screen flex flex-col min-w-0 max-w-full overflow-x-hidden bg-[var(--md-sys-color-surface-container-low)] text-[var(--md-sys-color-on-surface)]">
+        {/* Top Header Bar - M3 Center App Bar 64px */}
+        <header className="sticky top-0 z-20 bg-[var(--md-sys-color-surface-container)] border-b border-[var(--md-sys-color-outline-variant)] px-4 sm:px-6 py-3 flex items-center justify-between shadow-xs w-full max-w-full">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsOpenMobile(true)}
-              className="md:hidden p-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 transition-all"
+              className="md:hidden p-2.5 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] hover:bg-[#d8cffc] transition-all"
             >
               <Menu className="w-5 h-5" />
             </button>
 
             <div>
-              <div className="flex items-center gap-1.5 text-[11px] font-medium text-blue-400">
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[var(--md-sys-color-primary)]">
                 <span>Dashboard</span>
                 <span>/</span>
-                <span className="text-blue-700 font-semibold">
-                  {currentPage === 'dashboard' && 'Beranda'}
-                  {currentPage === 'logs' && 'Riwayat Absensi'}
+                <span className="text-[var(--md-sys-color-on-surface-variant)] font-bold">
+                  {currentPage === 'dashboard' && 'Beranda Utama'}
+                  {currentPage === 'logs' && 'Log Absensi Detail'}
                   {currentPage === 'analytics' && 'Bandingkan Cabang'}
                 </span>
               </div>
-              <h1 className="text-base font-bold text-slate-900 leading-tight">
-                {currentPage === 'dashboard' && 'Monitoring Kehadiran'}
-                {currentPage === 'logs' && 'Riwayat Absensi Karyawan'}
-                {currentPage === 'analytics' && 'Bandingkan Tiap Cabang'}
+              <h1 className="text-base font-extrabold text-[var(--md-sys-color-on-surface)] tracking-tight leading-tight">
+                {currentPage === 'dashboard' && 'Monitoring Kehadiran Realtime'}
+                {currentPage === 'logs' && 'Log Riwayat Absensi Karyawan'}
+                {currentPage === 'analytics' && 'Analisis & Perbandingan Kantor Cabang'}
               </h1>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             {isLoadingData && (
-              <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-emerald-600 font-bold bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100 animate-pulse">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-                <span>Syncing Sheets...</span>
+              <div className="flex items-center gap-2 text-xs text-emerald-800 font-bold bg-emerald-100 px-3.5 py-1.5 rounded-full border border-emerald-300 animate-pulse">
+                <span className="w-2 h-2 rounded-full bg-emerald-600 animate-ping"></span>
+                <span>Sinkronisasi Google Sheets...</span>
               </div>
             )}
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/90 border border-slate-200/70 text-xs font-semibold text-slate-800">
+            <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--md-sys-color-secondary-container)] border border-[var(--md-sys-color-outline-variant)] text-xs font-bold text-[var(--md-sys-color-on-secondary-container)]">
               {session.role === 'SUPERUSER' ? (
-                <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
+                <ShieldCheck className="w-4 h-4 text-[var(--md-sys-color-primary)]" />
               ) : (
-                <UserCheck className="w-3.5 h-3.5 text-blue-600" />
+                <UserCheck className="w-4 h-4 text-[var(--md-sys-color-primary)]" />
               )}
               <span>{session.name}</span>
             </div>
@@ -356,42 +358,80 @@ export function App() {
             />
           </div>
 
-          {/* View Switcher */}
-          {currentPage === 'dashboard' && (
-            <div className="space-y-6">
-              <KpiSummaryCards
-                records={filteredRecords}
-                selectedLocationName={selectedLocationName}
-              />
-              <AttendanceCharts records={filteredRecords} />
-              <AttendanceTable
-                records={filteredRecords}
-                onEditRecord={handleEditRecord}
-                isEditable={session.role === 'SUPERUSER' || session.role === 'LOCATION_ADMIN'}
-              />
-              <ExceptionTrackers records={filteredRecords} />
-            </div>
-          )}
+          {/* View Switcher dengan Animasi Fast M3 Motion (160ms) & Skeleton Loading */}
+          <AnimatePresence mode="wait">
+            {currentPage === 'dashboard' && (
+              <motion.div
+                key="dashboard"
+                initial={{ opacity: 0, x: -12 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 12 }}
+                transition={{ duration: 0.16, ease: [0.2, 0.0, 0.0, 1.0] }}
+                className="space-y-6"
+              >
+                {isLoadingData && records.length === 0 ? (
+                  <div className="space-y-6">
+                    <KpiSkeletonGrid />
+                    <TableSkeleton rows={6} />
+                  </div>
+                ) : (
+                  <>
+                    <KpiSummaryCards
+                      records={filteredRecords}
+                      selectedLocationName={selectedLocationName}
+                    />
+                    <AttendanceCharts records={filteredRecords} />
+                    <AttendanceTable
+                      records={filteredRecords}
+                      onEditRecord={handleEditRecord}
+                      isEditable={session.role === 'SUPERUSER' || session.role === 'LOCATION_ADMIN'}
+                    />
+                    <ExceptionTrackers records={filteredRecords} />
+                  </>
+                )}
+              </motion.div>
+            )}
 
-          {currentPage === 'logs' && (
-            <div>
-              <AttendanceLogPage
-                records={filteredRecords}
-                onEditRecord={handleEditRecord}
-                isEditable={session.role === 'SUPERUSER' || session.role === 'LOCATION_ADMIN'}
-                onOpenAddModal={() => {
-                  setEditingRecord(null);
-                  setIsAddModalOpen(true);
-                }}
-              />
-            </div>
-          )}
+            {currentPage === 'logs' && (
+              <motion.div
+                key="logs"
+                initial={{ opacity: 0, x: 12 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -12 }}
+                transition={{ duration: 0.16, ease: [0.2, 0.0, 0.0, 1.0] }}
+              >
+                {isLoadingData && records.length === 0 ? (
+                  <TableSkeleton rows={8} />
+                ) : (
+                  <AttendanceLogPage
+                    records={filteredRecords}
+                    onEditRecord={handleEditRecord}
+                    isEditable={session.role === 'SUPERUSER' || session.role === 'LOCATION_ADMIN'}
+                    onOpenAddModal={() => {
+                      setEditingRecord(null);
+                      setIsAddModalOpen(true);
+                    }}
+                  />
+                )}
+              </motion.div>
+            )}
 
-          {currentPage === 'analytics' && (
-            <div>
-              <LocationAnalyticsPage records={filteredRecords} />
-            </div>
-          )}
+            {currentPage === 'analytics' && (
+              <motion.div
+                key="analytics"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.16, ease: [0.2, 0.0, 0.0, 1.0] }}
+              >
+                {isLoadingData && records.length === 0 ? (
+                  <AnalyticsSkeleton />
+                ) : (
+                  <LocationAnalyticsPage records={filteredRecords} />
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </main>
       </div>
 

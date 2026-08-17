@@ -5,9 +5,7 @@ interface UnauthorizedModalProps {
   isOpen: boolean;
   onClose: () => void;
   email: string;
-  /** 'SUPERUSER' | 'LOCATION_ADMIN' — menentukan isi pesan */
   role: 'SUPERUSER' | 'LOCATION_ADMIN';
-  /** Nama lokasi (utk admin cabang), contoh 'PBM - Pasar Bersehati Manado' */
   locationName?: string;
 }
 
@@ -24,22 +22,22 @@ export const UnauthorizedModal: React.FC<UnauthorizedModalProps> = ({
   const locLabel = locationName || 'Cabang';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+      <div className="relative w-full max-w-md bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)] rounded-[28px] border border-[var(--md-sys-color-outline-variant)] shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200">
         {/* Header */}
-        <div className="bg-gradient-to-r from-rose-500 to-red-600 p-4 flex items-center justify-between">
+        <div className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] p-5 flex items-center justify-between border-b border-rose-300">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center">
-              <AlertTriangle className="w-6 h-6 text-white" />
+            <div className="p-2.5 rounded-2xl bg-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)]">
+              <AlertTriangle className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">Akses Ditolak</h3>
-              <p className="text-xs text-rose-100">Unauthorized Access</p>
+              <h3 className="text-base font-bold">Akses Ditolak (Unauthorized)</h3>
+              <p className="text-xs opacity-80">Hak Akses Tidak Mencukupi</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-white/20 text-white transition-all"
+            className="p-2 rounded-full hover:bg-black/10 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -47,12 +45,12 @@ export const UnauthorizedModal: React.FC<UnauthorizedModalProps> = ({
 
         {/* Body */}
         <div className="p-6 space-y-4">
-          <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl">
-            <p className="text-sm font-semibold text-rose-900 mb-2">
+          <div className="p-4 bg-[var(--md-sys-color-surface-container-lowest)] border border-[var(--md-sys-color-outline-variant)] rounded-2xl">
+            <p className="text-xs font-bold text-[var(--md-sys-color-error)] mb-1">
               {isLocationAdmin ? `Akun Anda Bukan Admin ${locLabel}` : 'Akun Anda Bukan Superuser'}
             </p>
-            <p className="text-xs text-rose-700 leading-relaxed">
-              Email <span className="font-mono font-bold">{email}</span> tidak terdaftar{' '}
+            <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
+              Email <span className="font-mono font-bold text-[var(--md-sys-color-on-surface)]">{email}</span> tidak terdaftar{' '}
               {isLocationAdmin ? (
                 <>sebagai admin <span className="font-semibold">{locLabel}</span> dalam sistem.</>
               ) : (
@@ -61,29 +59,29 @@ export const UnauthorizedModal: React.FC<UnauthorizedModalProps> = ({
             </p>
           </div>
 
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-slate-700">
+          <div className="space-y-2 text-xs text-[var(--md-sys-color-on-surface-variant)]">
+            <p>
               Hanya akun{' '}
               {isLocationAdmin ? (
-                <>admin <span className="font-semibold">{locLabel}</span> yang terdaftar</>
+                <>admin <strong className="font-semibold text-[var(--md-sys-color-on-surface)]">{locLabel}</strong></>
               ) : (
-                <>superuser yang terdaftar</>
+                <>superuser</>
               )}{' '}
-              yang dapat mengakses sistem monitoring absensi KC SulutGoTengPa.
+              yang terdaftar yang berhak mengelola data absensi KC SulutgoTengPa.
             </p>
-            <p className="text-xs text-slate-500">
-              Hubungi administrator sistem untuk mendaftarkan akun Anda atau gunakan akun yang telah terdaftar.
+            <p>
+              Silakan hubungi administrator sistem untuk pendaftaran hak akses baru.
             </p>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="px-6 pb-6">
+        <div className="px-6 pb-6 pt-2 flex justify-end">
           <button
             onClick={onClose}
-            className="w-full py-2.5 px-4 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-slate-800 hover:to-black text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-slate-900/20"
+            className="m3-btn-filled text-xs py-2.5 px-6"
           >
-            Mengerti, Tutup
+            Mengerti & Tutup
           </button>
         </div>
       </div>

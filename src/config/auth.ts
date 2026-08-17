@@ -6,6 +6,7 @@ import type { LocationCode } from '../types/attendance';
  */
 export const SUPERUSER_WHITELIST: string[] = [
   'flakoro10@gmail.com',
+  'ayudyahp21@gmail.com'
   // Tambahkan 2 email superuser lainnya di sini:
   // 'email2@example.com',
   // 'email3@example.com',

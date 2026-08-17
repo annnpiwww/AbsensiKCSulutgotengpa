@@ -17,14 +17,6 @@ export const DEFAULT_SPREADSHEET_URL =
 export const DEFAULT_APPS_SCRIPT_URL =
   'https://script.google.com/macros/s/AKfycbwlpJ2BUTKa_BRYqxEaXTVLVyfYl5A46_PrCGZs3CAkqeNCI4VAf9mbvE1vwdy4BOwB/exec';
 
-const getSpreadsheetId = (url: string) => {
-  const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-  if (match && match[1]) {
-    return match[1];
-  }
-  return url;
-};
-
 export const GoogleSheetsSyncModal: React.FC<GoogleSheetsSyncModalProps> = ({
   isOpen,
   onClose,
@@ -32,214 +24,135 @@ export const GoogleSheetsSyncModal: React.FC<GoogleSheetsSyncModalProps> = ({
   onExportCSV,
   onImportCSV,
 }) => {
-  const [sheetUrl, setSheetUrl] = useState(() => {
-    return localStorage.getItem('absensi_sheet_url') || DEFAULT_SPREADSHEET_URL;
-  });
-  const [inputUrl, setInputUrl] = useState(sheetUrl);
-
-  const [appsScriptUrl, setAppsScriptUrl] = useState(() => {
-    return localStorage.getItem('absensi_apps_script_url') || DEFAULT_APPS_SCRIPT_URL;
-  });
-  const [inputAppsScriptUrl, setInputAppsScriptUrl] = useState(appsScriptUrl);
-
+  const [sheetUrl, setSheetUrl] = useState(DEFAULT_SPREADSHEET_URL);
+  const [scriptUrl, setScriptUrl] = useState(DEFAULT_APPS_SCRIPT_URL);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [lastSyncedTime, setLastSyncedTime] = useState<string>('Sekarang');
+  const [syncStatus, setSyncStatus] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
-  const handleManualSync = async () => {
+  const handleFetchFromSheet = async () => {
     setIsSyncing(true);
+    setSyncStatus('Sedang menarik data dari Google Sheets...');
+
     try {
-      const url = localStorage.getItem('absensi_apps_script_url') || DEFAULT_APPS_SCRIPT_URL;
-      const res = await fetch(url);
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-      }
+      const res = await fetch(`${scriptUrl}?action=getData`);
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const data = await res.json();
+
       if (Array.isArray(data)) {
         onImportCSV(data);
-        setLastSyncedTime(new Date().toLocaleTimeString('id-ID'));
-        alert('Sinkronisasi sukses! Data berhasil diimpor dari Google Sheet.');
+        setSyncStatus(`Berhasil menarik ${data.length} data presensi dari Google Sheets!`);
       } else {
-        throw new Error('Data format tidak valid (harus JSON Array)');
+        throw new Error('Data format tidak valid');
       }
     } catch (e: any) {
-      console.error(e);
-      alert(`Sinkronisasi gagal: ${e.message || 'Koneksi gagal/CORS Block'}`);
+      setSyncStatus(`Gagal melakukan sync: ${e.message || e}`);
     } finally {
       setIsSyncing(false);
     }
   };
 
-  const handleSaveUrl = () => {
-    const trimmedSheet = inputUrl.trim();
-    const trimmedScript = inputAppsScriptUrl.trim();
-    
-    if (trimmedSheet) {
-      localStorage.setItem('absensi_sheet_url', trimmedSheet);
-      setSheetUrl(trimmedSheet);
-    }
-    if (trimmedScript) {
-      localStorage.setItem('absensi_apps_script_url', trimmedScript);
-      setAppsScriptUrl(trimmedScript);
-    }
-    alert('Konfigurasi link berhasil disimpan!');
-  };
-
-  const sheetId = getSpreadsheetId(sheetUrl);
-  const displayId = sheetId.length > 20 ? `${sheetId.substring(0, 13)}...` : sheetId;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
-      <div className="bento-card max-w-2xl w-full overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+      <div className="bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)] rounded-[28px] border border-[var(--md-sys-color-outline-variant)] shadow-xl w-full max-w-xl overflow-hidden animate-in fade-in zoom-in duration-200">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div className="p-6 border-b border-[var(--md-sys-color-outline-variant)] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-200/60">
-              <FileSpreadsheet className="w-5 h-5" />
+            <div className="p-3 rounded-2xl bg-emerald-100 text-emerald-800">
+              <FileSpreadsheet className="w-6 h-6 text-emerald-700" />
             </div>
             <div>
-              <h3 className="font-semibold text-slate-900 text-sm">
-                Integrasi Google Sheets (18 Cabang)
-              </h3>
-              <p className="text-[11px] text-slate-500 font-normal">
-                Target Sheet: <span className="font-mono text-emerald-700">{displayId}</span>
+              <h2 className="font-bold text-lg text-[var(--md-sys-color-on-surface)]">
+                Integrasi Realtime Google Sheets
+              </h2>
+              <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] mt-0.5">
+                Sinkronisasi database absensi dengan Spreadsheet KC Sulutgo
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+            className="p-2 text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-highest)] rounded-full transition-colors"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-4 text-xs font-medium">
-          {/* Active Status Info Bar */}
-          <div className="p-4 bg-emerald-50/70 border border-emerald-200/70 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-              </span>
-              <div>
-                <div className="font-semibold text-emerald-900 text-xs">
-                  Sync Google Sheets Aktif
-                </div>
-                <div className="text-[11px] text-emerald-700 font-normal mt-0.5">
-                  Terakhir sinkron: <span className="font-semibold">{lastSyncedTime}</span>
-                </div>
+        <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+          {/* External Link Card */}
+          <div className="p-4 bg-[var(--md-sys-color-surface-container-lowest)] rounded-2xl border border-[var(--md-sys-color-outline-variant)] flex items-center justify-between gap-3">
+            <div>
+              <div className="text-xs font-bold text-[var(--md-sys-color-on-surface)]">
+                Spreadsheet Utama KC Sulutgo
+              </div>
+              <div className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] truncate max-w-md">
+                {sheetUrl}
               </div>
             </div>
+            <a
+              href={sheetUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="m3-btn-tonal text-xs py-1.5 px-3.5 shrink-0"
+            >
+              <span>Buka Sheet</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </div>
 
-            <div className="flex items-center gap-2">
-              <a
-                href={sheetUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="btn-secondary text-xs flex items-center gap-1.5 py-1.5 px-3"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-                <span>Buka Sheet</span>
-              </a>
-
+          {/* Sync Trigger Action */}
+          <div className="p-4 bg-[var(--md-sys-color-surface-container-low)] rounded-2xl border border-[var(--md-sys-color-outline-variant)] space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-bold text-[var(--md-sys-color-on-surface)]">
+                Tarik Data Terbaru (Sync)
+              </h4>
               <button
-                onClick={handleManualSync}
+                onClick={handleFetchFromSheet}
                 disabled={isSyncing}
-                className="btn-primary text-xs flex items-center gap-1.5 py-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50"
+                className="m3-btn-filled text-xs py-2 px-5 disabled:opacity-50"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
-                <span>{isSyncing ? 'Loading...' : 'Sync 18 Sheet'}</span>
+                <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                <span>{isSyncing ? 'Proses Sync...' : 'Sync Sekarang'}</span>
               </button>
             </div>
+
+            {syncStatus && (
+              <div className="p-3 bg-[var(--md-sys-color-surface-container-lowest)] rounded-xl border border-[var(--md-sys-color-outline-variant)] text-xs text-[var(--md-sys-color-on-surface)]">
+                {syncStatus}
+              </div>
+            )}
           </div>
 
-          {/* Form Input Link Baru */}
-          <div className="p-4 bg-slate-50 border border-slate-200/60 rounded-xl space-y-3">
-            <h4 className="font-semibold text-slate-700 text-[10px] uppercase tracking-wider">
-              Konfigurasi Integrasi Google Sheets
-            </h4>
-            <div className="space-y-2">
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold text-slate-500">
-                  LINK GOOGLE SHEET
-                </label>
-                <input
-                  type="text"
-                  placeholder="https://docs.google.com/spreadsheets/d/.../edit"
-                  value={inputUrl}
-                  onChange={(e) => setInputUrl(e.target.value)}
-                  className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-normal focus:outline-hidden focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold text-slate-500">
-                  LINK APPS SCRIPT WEB APP (API DEPLOYMENT)
-                </label>
-                <input
-                  type="text"
-                  placeholder="https://script.google.com/macros/s/.../exec"
-                  value={inputAppsScriptUrl}
-                  onChange={(e) => setInputAppsScriptUrl(e.target.value)}
-                  className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-normal focus:outline-hidden focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
-                />
-              </div>
-
-              <div className="pt-1 flex justify-end">
-                <button
-                  type="button"
-                  onClick={handleSaveUrl}
-                  className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold cursor-pointer transition-colors"
-                >
-                  Simpan Konfigurasi
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* 18 Sheets List Grid */}
+          {/* Breakdown Sheet Tabs Info */}
           <div>
-            <h4 className="font-semibold text-slate-700 uppercase tracking-wider text-[10px] mb-2">
-              Status Tab Sheet Tiap Cabang (18 Sheet Aktif)
+            <h4 className="text-xs font-bold text-[var(--md-sys-color-on-surface)] mb-2">
+              Daftar Tab Sheet Berdasarkan Kantor Cabang (13 Sheet)
             </h4>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-52 overflow-y-auto pr-1">
-              {ALL_LOCATIONS.map((loc) => {
-                const count = records.filter((r) => r.location === loc).length;
-                return (
-                  <div
-                    key={loc}
-                    className="p-2.5 rounded-lg border border-slate-200/70 bg-slate-50/50 flex items-center justify-between"
-                  >
-                    <div>
-                      <span className="font-mono font-semibold text-slate-900 block text-xs">{loc}</span>
-                      <span className="text-[10px] text-slate-500 truncate block max-w-[110px]">
-                        {LOCATION_NAMES[loc]}
-                      </span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-xs font-bold text-emerald-600 block">{count}</span>
-                      <span className="text-[9px] text-slate-400 uppercase">Logs</span>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {ALL_LOCATIONS.map((loc) => (
+                <div
+                  key={loc}
+                  className="p-2.5 bg-[var(--md-sys-color-surface-container-lowest)] rounded-xl border border-[var(--md-sys-color-outline-variant)] text-xs font-medium text-[var(--md-sys-color-on-surface)]"
+                >
+                  <span className="font-bold text-[var(--md-sys-color-primary)]">{loc}</span>: {LOCATION_NAMES[loc]}
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Fallback CSV Actions */}
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-            <div className="text-slate-500 font-normal text-[11px]">
-              Offline / Backup Export:
-            </div>
+          {/* Fallback CSV */}
+          <div className="pt-4 border-t border-[var(--md-sys-color-outline-variant)] flex items-center justify-between">
+            <span className="text-xs text-[var(--md-sys-color-on-surface-variant)]">
+              Backup / Offline Export Data:
+            </span>
             <button
               onClick={onExportCSV}
-              className="btn-secondary text-xs flex items-center gap-1.5 py-1.5 px-3"
+              className="m3-btn-outlined text-xs py-1.5 px-4"
             >
               <Download className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Export Master CSV</span>
+              <span>Export CSV File</span>
             </button>
           </div>
         </div>

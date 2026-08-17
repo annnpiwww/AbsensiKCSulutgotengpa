@@ -4,7 +4,6 @@ import {
   Pie,
   Cell,
   Tooltip,
-  Legend,
   ResponsiveContainer,
   LineChart,
   Line,
@@ -22,144 +21,192 @@ interface AttendanceChartsProps {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  Hadir: '#10B981',
-  Terlambat: '#F59E0B',
-  Izin: '#3B82F6',
-  Sakit: '#EF4444',
-  SKD: '#8B5CF6',
-  Alpa: '#DC2626',
+  Hadir: '#10b981',
+  Izin: '#f59e0b',
+  Sakit: '#3b82f6',
+  SKD: '#0284c7',
+  Terlambat: '#f97316',
+  Alpa: '#ef4444',
+  Cuti: '#a855f7',
+  Off: '#94a3b8',
 };
 
 export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({ records }) => {
-  // Pie Chart Data
+  // Data Pie Chart
   const statusCounts = records.reduce((acc, r) => {
     acc[r.status] = (acc[r.status] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
-  const pieData = Object.entries(statusCounts).map(([name, value]) => ({
-    name,
-    value,
+  const pieData = Object.keys(statusCounts).map((status) => ({
+    name: status,
+    value: statusCounts[status],
   }));
 
-  // Bar Chart Data - Group by Location
-  const locationData = (Object.keys(LOCATION_NAMES) as LocationCode[])
-    .map((location) => {
-      const locationRecords = records.filter((r) => r.location === location);
-      const counts = locationRecords.reduce((acc, r) => {
-        acc[r.status] = (acc[r.status] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
+  // Data Line Chart
+  const dateCounts = records.reduce((acc, r) => {
+    if (!acc[r.date]) {
+      acc[r.date] = { date: r.date, Hadir: 0, TidakHadir: 0 };
+    }
+    if (r.status === 'Hadir') {
+      acc[r.date].Hadir += 1;
+    } else {
+      acc[r.date].TidakHadir += 1;
+    }
+    return acc;
+  }, {} as Record<string, { date: string; Hadir: number; TidakHadir: number }>);
 
-      return {
-        location: location, // Gunakan kode singkat (TBM, MGAM, dll)
-        Hadir: counts['Hadir'] || 0,
-        Terlambat: counts['Terlambat'] || 0,
-        Sakit: counts['Sakit'] || 0,
-        SKD: counts['SKD'] || 0,
-        Izin: counts['Izin'] || 0,
-        Alpa: counts['Alpa'] || 0,
-      };
-    })
-    .filter((d) => Object.values(d).some((v) => typeof v === 'number' && v > 0))
-    .slice(0, 10);
+  const lineData = Object.values(dateCounts).sort((a, b) => (a.date > b.date ? 1 : -1));
+
+  // Data Bar Chart per Lokasi
+  const locationCounts = records.reduce((acc, r) => {
+    const locCode = r.location || 'TBM';
+    const locName = LOCATION_NAMES[locCode] || locCode;
+    if (!acc[locName]) {
+      acc[locName] = { location: locName, Hadir: 0, Terlambat: 0, Sakit: 0, SKD: 0, Izin: 0, Alpa: 0 };
+    }
+    if (r.status === 'Hadir') acc[locName].Hadir += 1;
+    else if (r.status === 'Terlambat') acc[locName].Terlambat += 1;
+    else if (r.status === 'Sakit') acc[locName].Sakit += 1;
+    else if (r.status === 'SKD') acc[locName].SKD += 1;
+    else if (r.status === 'Izin') acc[locName].Izin += 1;
+    else if (r.status === 'Alpa') acc[locName].Alpa += 1;
+    return acc;
+  }, {} as Record<string, any>);
+
+  const barData = Object.values(locationCounts);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Pie Chart Card */}
-      <div className="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/60 border border-slate-200/60 hover:shadow-xl transition-all duration-300">
-        <div className="mb-4">
-          <h3 className="text-base font-bold text-slate-900 mb-1">Distribusi Status Kehadiran</h3>
-          <p className="text-sm text-slate-500">Persentase tiap kategori absensi</p>
-        </div>
-        <div style={{ width: '100%', height: 300 }}>
-          <ResponsiveContainer>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      {/* Chart 1: Donut Distribution (M3 Surface Container Lowest) */}
+      <div className="bg-[var(--md-sys-color-surface-container-lowest)] p-5 rounded-2xl border border-[var(--md-sys-color-outline-variant)] shadow-xs">
+        <h3 className="font-bold text-[var(--md-sys-color-on-surface)] text-sm tracking-tight mb-1">
+          Distribusi Status Kehadiran
+        </h3>
+        <p className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] mb-4">
+          Proporsi status presensi dalam periode terfilter
+        </p>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={pieData}
                 cx="50%"
-                cy="45%"
-                labelLine={false}
+                cy="50%"
+                innerRadius={55}
                 outerRadius={85}
-                fill="#8884d8"
+                paddingAngle={4}
                 dataKey="value"
-                strokeWidth={2}
-                stroke="#fff"
               >
                 {pieData.map((entry, index) => (
-                  <Cell 
-                    key={`cell-${index}`} 
-                    fill={STATUS_COLORS[entry.name] || '#94a3b8'} 
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={STATUS_COLORS[entry.name] || '#64748b'}
+                    stroke="var(--md-sys-color-surface-container-lowest)"
+                    strokeWidth={2}
                   />
                 ))}
               </Pie>
-              <Tooltip 
+              <Tooltip
                 contentStyle={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '12px',
-                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                  padding: '8px 12px',
+                  backgroundColor: 'var(--md-sys-color-surface-container-high)',
+                  borderColor: 'var(--md-sys-color-outline-variant)',
+                  color: 'var(--md-sys-color-on-surface)',
+                  borderRadius: '16px',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                  padding: '8px 14px',
                 }}
-                itemStyle={{
-                  color: '#334155',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                }}
-              />
-              <Legend 
-                verticalAlign="bottom" 
-                height={36}
-                iconType="circle"
-                formatter={(value, entry: any) => (
-                  <span style={{ color: '#64748b', fontSize: '12px', fontWeight: 500 }}>
-                    {value}: {entry.payload.value}
-                  </span>
-                )}
+                itemStyle={{ fontSize: '12px', fontWeight: 600 }}
               />
             </PieChart>
           </ResponsiveContainer>
         </div>
+        <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
+          {pieData.map((d) => (
+            <div
+              key={d.name}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--md-sys-color-surface-container-low)] border border-[var(--md-sys-color-outline-variant)] text-[11px] font-medium"
+            >
+              <span
+                className="w-2.5 h-2.5 rounded-full"
+                style={{ backgroundColor: STATUS_COLORS[d.name] || '#64748b' }}
+              />
+              <span className="text-[var(--md-sys-color-on-surface)]">{d.name}: <strong>{d.value}</strong></span>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Bar Chart Card */}
-      <div className="bg-white rounded-2xl p-6 shadow-lg shadow-slate-200/60 border border-slate-200/60 hover:shadow-xl transition-all duration-300">
-        <div className="mb-4">
-          <h3 className="text-base font-bold text-slate-900 mb-1">Perbandingan Per Cabang</h3>
-          <p className="text-sm text-slate-500">Grafik kehadiran 10 Cabang teratas</p>
-        </div>
-        <div style={{ width: '100%', height: 280 }}>
-          <ResponsiveContainer>
-            <BarChart
-              data={locationData}
-              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis 
-                dataKey="location" 
-                tick={{ fontSize: 11, fill: '#64748b' }}
-                angle={-45}
-                textAnchor="end"
-                height={80}
-                stroke="#cbd5e1"
-              />
-              <YAxis 
-                tick={{ fontSize: 11, fill: '#64748b' }}
-                stroke="#cbd5e1"
-              />
-              <Tooltip 
+      {/* Chart 2: Tren Harian Line Chart */}
+      <div className="bg-[var(--md-sys-color-surface-container-lowest)] p-5 rounded-2xl border border-[var(--md-sys-color-outline-variant)] shadow-xs lg:col-span-2">
+        <h3 className="font-bold text-[var(--md-sys-color-on-surface)] text-sm tracking-tight mb-1">
+          Tren Harian Kehadiran Karyawan
+        </h3>
+        <p className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] mb-4">
+          Perbandingan tren Hadir vs Ketidakhadiran per tanggal
+        </p>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={lineData} margin={{ top: 10, right: 20, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--md-sys-color-outline-variant)" opacity={0.5} />
+              <XAxis dataKey="date" stroke="var(--md-sys-color-on-surface-variant)" fontSize={11} tickLine={false} />
+              <YAxis stroke="var(--md-sys-color-on-surface-variant)" fontSize={11} tickLine={false} />
+              <Tooltip
                 contentStyle={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '12px',
-                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                  padding: '8px 12px',
+                  backgroundColor: 'var(--md-sys-color-surface-container-high)',
+                  borderColor: 'var(--md-sys-color-outline-variant)',
+                  color: 'var(--md-sys-color-on-surface)',
+                  borderRadius: '16px',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                  padding: '8px 14px',
                 }}
-                itemStyle={{
-                  fontSize: '12px',
-                  fontWeight: 600,
+                itemStyle={{ fontSize: '12px', fontWeight: 600 }}
+              />
+              <Line
+                type="monotone"
+                dataKey="Hadir"
+                stroke="#10b981"
+                strokeWidth={3}
+                dot={{ r: 4, fill: '#10b981' }}
+                activeDot={{ r: 6 }}
+              />
+              <Line
+                type="monotone"
+                dataKey="TidakHadir"
+                stroke="#ef4444"
+                strokeWidth={3}
+                dot={{ r: 4, fill: '#ef4444' }}
+                activeDot={{ r: 6 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Chart 3: Perbandingan Per Kantor Cabang Bar Chart */}
+      <div className="bg-[var(--md-sys-color-surface-container-lowest)] p-5 rounded-2xl border border-[var(--md-sys-color-outline-variant)] shadow-xs lg:col-span-3">
+        <h3 className="font-bold text-[var(--md-sys-color-on-surface)] text-sm tracking-tight mb-1">
+          Perbandingan Kehadiran Per Kantor Cabang (Sulutgo)
+        </h3>
+        <p className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] mb-4">
+          Breakdown status presensi per lokasi office
+        </p>
+        <div className="h-72">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={barData} margin={{ top: 10, right: 20, left: -10, bottom: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--md-sys-color-outline-variant)" opacity={0.5} />
+              <XAxis dataKey="location" stroke="var(--md-sys-color-on-surface-variant)" fontSize={11} tickLine={false} interval={0} angle={-15} textAnchor="end" />
+              <YAxis stroke="var(--md-sys-color-on-surface-variant)" fontSize={11} tickLine={false} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'var(--md-sys-color-surface-container-high)',
+                  borderColor: 'var(--md-sys-color-outline-variant)',
+                  color: 'var(--md-sys-color-on-surface)',
+                  borderRadius: '16px',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                  padding: '8px 14px',
                 }}
-                cursor={{ fill: 'rgba(59, 130, 246, 0.05)' }}
+                itemStyle={{ fontSize: '12px', fontWeight: 600 }}
               />
               <Bar dataKey="Hadir" fill={STATUS_COLORS.Hadir} radius={[4, 4, 0, 0]} stackId="a" />
               <Bar dataKey="Terlambat" fill={STATUS_COLORS.Terlambat} radius={[4, 4, 0, 0]} stackId="a" />

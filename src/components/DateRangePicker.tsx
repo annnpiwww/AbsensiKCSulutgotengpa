@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar as CalendarIcon, Check, Filter, X, ChevronDown, Clock } from 'lucide-react';
+import { Calendar as CalendarIcon, Check, Filter, X, ChevronDown } from 'lucide-react';
 import { DateField } from './ui/date-field';
 
 export type DateFilterPreset = 'ALL' | 'MONTHLY_1_25' | 'TODAY' | 'THIS_MONTH' | 'CUSTOM' | 'CUSTOM_SINGLE';
@@ -23,166 +23,149 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
 }) => {
   const [tempStartDate, setTempStartDate] = useState(startDate);
   const [tempEndDate, setTempEndDate] = useState(endDate);
-  const [isModified, setIsModified] = useState(false);
+  const [showCustomPicker, setShowCustomPicker] = useState(false);
 
   useEffect(() => {
     setTempStartDate(startDate);
     setTempEndDate(endDate);
-    setIsModified(false);
   }, [startDate, endDate]);
 
-  const handleStartChange = (val: string) => {
-    setTempStartDate(val);
-    setIsModified(true);
-  };
-
-  const handleEndChange = (val: string) => {
-    setTempEndDate(val);
-    setIsModified(true);
-  };
-
-  const handleConfirmApply = () => {
-    onApplyCustomDate(tempStartDate, tempEndDate);
-    setIsModified(false);
-  };
-
-  const presets: { id: DateFilterPreset; label: string }[] = [
-    { id: 'ALL', label: 'Semua Tanggal' },
-    { id: 'MONTHLY_1_25', label: 'Tanggal 1 - 25 Perbulan' },
-    { id: 'THIS_MONTH', label: 'Bulan Ini' },
-    { id: 'TODAY', label: 'Hari Ini' },
-    { id: 'CUSTOM_SINGLE', label: 'Kustom: Satu Tanggal' },
-    { id: 'CUSTOM', label: 'Kustom: Rentang Tanggal' },
+  const presets: { key: DateFilterPreset; label: string }[] = [
+    { key: 'ALL', label: 'Semua Data' },
+    { key: 'MONTHLY_1_25', label: 'Periode 1 - 25' },
+    { key: 'TODAY', label: 'Hari Ini' },
+    { key: 'THIS_MONTH', label: 'Bulan Ini' },
+    { key: 'CUSTOM_SINGLE', label: 'Pilih Tanggal' },
+    { key: 'CUSTOM', label: 'Rentang Kustom' },
   ];
 
+  const handleApplyCustom = () => {
+    if (preset === 'CUSTOM_SINGLE' && !tempStartDate) {
+      alert('Pilih tanggal terlebih dahulu!');
+      return;
+    }
+    if (preset === 'CUSTOM' && (!tempStartDate || !tempEndDate)) {
+      alert('Pilih tanggal awal dan akhir!');
+      return;
+    }
+    onApplyCustomDate(tempStartDate, tempEndDate);
+    setShowCustomPicker(false);
+  };
+
   return (
-    <div className="bento-card p-3.5 sm:p-4 rounded-xl border border-slate-200/80 bg-white shadow-2xs space-y-3 min-w-0 max-w-full overflow-hidden">
-      {/* Header & Mantis Style Select Control */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        {/* Title */}
-        <div className="flex items-center gap-2.5">
-          <div className="p-2 rounded-lg bg-sky-50 text-sky-600 border border-sky-100/80">
-            <CalendarIcon className="w-4 h-4" />
+    <div className="bg-[var(--md-sys-color-surface-container-lowest)] p-4 rounded-2xl border border-[var(--md-sys-color-outline-variant)] shadow-xs space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <div className="p-2 rounded-xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]">
+            <CalendarIcon className="w-4 h-4 text-[var(--md-sys-color-primary)]" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-                Filter Periode Waktu
-              </h3>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
-                Data Sinkron Terbaru
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500 font-medium mt-0.5">
-              Filter berdasarkan tanggal
+            <h4 className="text-xs font-bold text-[var(--md-sys-color-on-surface)]">
+              Filter Rentang Waktu Presensi
+            </h4>
+            <p className="text-[11px] text-[var(--md-sys-color-on-surface-variant)]">
+              Pilih preset periode atau tanggal kustom
             </p>
           </div>
         </div>
 
-        {/* Dropdown Selector */}
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          {preset !== 'ALL' && (
-            <button
-              onClick={onResetDateFilter}
-              className="px-2.5 py-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold flex items-center gap-1 transition-colors border border-rose-200/60 shrink-0"
-              title="Reset Filter Tanggal"
-            >
-              <X className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Reset</span>
-            </button>
-          )}
-
-          <div className="relative w-full sm:w-64">
-            <Clock className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <select
-              value={preset}
-              onChange={(e) => onSelectPreset(e.target.value as DateFilterPreset)}
-              className="w-full pl-11 pr-11 py-2 bg-slate-50 hover:bg-slate-100/80 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 cursor-pointer appearance-none transition-all"
-            >
-              {presets.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="w-4 h-4 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-          </div>
-        </div>
+        {preset !== 'ALL' && (
+          <button
+            onClick={onResetDateFilter}
+            className="text-xs text-[var(--md-sys-color-error)] hover:bg-[var(--md-sys-color-error-container)] px-3 py-1 rounded-full border border-rose-200 transition-colors flex items-center gap-1 font-medium"
+          >
+            <X className="w-3.5 h-3.5" />
+            <span>Reset Filter</span>
+          </button>
+        )}
       </div>
 
-      {/* Expanded Section for Custom Date Pickers */}
-      {(preset === 'CUSTOM' || preset === 'CUSTOM_SINGLE') && (
-        <div className="pt-3 border-t border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-slate-50/70 p-3 rounded-lg border border-slate-200/60 min-w-0 max-w-full">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full lg:w-auto">
-            {preset === 'CUSTOM_SINGLE' ? (
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto items-start sm:items-center">
-                <span className="text-xs font-bold text-blue-700">Pilih Tanggal:</span>
-                <DateField
-                  value={tempStartDate}
-                  onChange={(v) => {
-                    handleStartChange(v);
-                    setTempEndDate(v);
-                  }}
-                  placeholder="Pilih tanggal"
-                  className="w-full sm:w-44"
-                />
-              </div>
-            ) : (
-              <>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto items-start sm:items-center">
-                  <span className="text-xs font-bold text-blue-600">Dari:</span>
-                  <DateField
-                    value={tempStartDate}
-                    onChange={(v) => handleStartChange(v)}
-                    placeholder="Dari tanggal"
-                    className="w-full sm:w-44"
-                  />
-                </div>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto items-start sm:items-center">
-                  <span className="text-xs font-bold text-blue-600">Sampai:</span>
-                  <DateField
-                    value={tempEndDate}
-                    onChange={(v) => handleEndChange(v)}
-                    placeholder="Sampai tanggal"
-                    className="w-full sm:w-44"
-                  />
-                </div>
-              </>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2 pt-1 sm:pt-0">
-            {isModified && (
-              <span className="text-[11px] font-bold text-amber-600 animate-pulse">
-                • Klik Terapkan dulu
-              </span>
-            )}
+      {/* M3 Preset Filter Chips (Pill Buttons) */}
+      <div className="flex flex-wrap items-center gap-2">
+        {presets.map((p) => {
+          const isActive = preset === p.key;
+          return (
             <button
-              onClick={handleConfirmApply}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-2xs cursor-pointer ${
-                isModified
-                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+              key={p.key}
+              onClick={() => {
+                onSelectPreset(p.key);
+                if (p.key === 'CUSTOM' || p.key === 'CUSTOM_SINGLE') {
+                  setShowCustomPicker(true);
+                } else {
+                  setShowCustomPicker(false);
+                }
+              }}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
+                isActive
+                  ? 'bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] font-bold border border-[var(--md-sys-color-primary)] shadow-xs'
+                  : 'bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)] border border-transparent hover:bg-[var(--md-sys-color-surface-container-highest)] hover:text-[var(--md-sys-color-on-surface)]'
               }`}
             >
+              <span>{p.label}</span>
+              {(p.key === 'CUSTOM' || p.key === 'CUSTOM_SINGLE') && (
+                <ChevronDown className="w-3 h-3 opacity-70" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Custom Date Input Form Panel */}
+      {showCustomPicker && (
+        <div className="p-4 bg-[var(--md-sys-color-surface-container-low)] rounded-2xl border border-[var(--md-sys-color-outline-variant)] space-y-3 animate-in fade-in duration-150">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[11px] font-semibold text-[var(--md-sys-color-on-surface-variant)] mb-1">
+                {preset === 'CUSTOM_SINGLE' ? 'Pilih Tanggal Presensi' : 'Tanggal Awal Mula'}
+              </label>
+              <DateField
+                value={tempStartDate}
+                onChange={(val) => setTempStartDate(val)}
+                placeholder="Pilih Tanggal"
+              />
+            </div>
+            {preset === 'CUSTOM' && (
+              <div>
+                <label className="block text-[11px] font-semibold text-[var(--md-sys-color-on-surface-variant)] mb-1">
+                  Tanggal Akhir Sampai
+                </label>
+                <DateField
+                  value={tempEndDate}
+                  onChange={(val) => setTempEndDate(val)}
+                  placeholder="Pilih Tanggal Akhir"
+                />
+              </div>
+            )}
+          </div>
+          <div className="flex justify-end gap-2 pt-1">
+            <button
+              onClick={() => setShowCustomPicker(false)}
+              className="m3-btn-outlined text-xs py-1.5 px-4"
+            >
+              Batal
+            </button>
+            <button
+              onClick={handleApplyCustom}
+              className="m3-btn-filled text-xs py-1.5 px-5"
+            >
               <Check className="w-3.5 h-3.5" />
-              <span>Terapkan</span>
+              <span>Terapkan Tanggal</span>
             </button>
           </div>
         </div>
       )}
 
-      {/* Active Filter Summary Info */}
-      <div className="text-[11px] font-medium text-slate-500 flex items-center gap-1.5 pt-1 border-t border-slate-100">
-        <Filter className="w-3.5 h-3.5 text-blue-600" />
+      {/* Filter Info Footer */}
+      <div className="text-xs font-medium text-[var(--md-sys-color-on-surface-variant)] flex items-center gap-1.5 pt-2 border-t border-[var(--md-sys-color-outline-variant)]">
+        <Filter className="w-3.5 h-3.5 text-[var(--md-sys-color-primary)]" />
         <span>Status Filter:</span>
-        <span className="text-slate-800 font-bold">
-          {preset === 'ALL' && 'Semua Log Presensi'}
-          {preset === 'MONTHLY_1_25' && 'Rentang Tanggal 1 s/d 25 (Setiap Bulan)'}
-          {preset === 'THIS_MONTH' && 'Bulan Ini'}
+        <span className="text-[var(--md-sys-color-on-surface)] font-bold">
+          {preset === 'ALL' && 'Semua Log Presensi Terdata'}
+          {preset === 'MONTHLY_1_25' && 'Periode Tanggal 1 s/d 25 Bulanan'}
+          {preset === 'THIS_MONTH' && 'Bulan Berjalan Ini'}
           {preset === 'TODAY' && 'Hari Ini'}
-          {preset === 'CUSTOM_SINGLE' && (startDate ? `Tanggal: ${startDate}` : 'Pilih tanggal & terapkan')}
-          {preset === 'CUSTOM' && (startDate && endDate ? `${startDate} s/d ${endDate}` : 'Tentukan tanggal & terapkan')}
+          {preset === 'CUSTOM_SINGLE' && (startDate ? `Tanggal Khusus: ${startDate}` : 'Pilih tanggal & terapkan')}
+          {preset === 'CUSTOM' && (startDate && endDate ? `${startDate} s/d ${endDate}` : 'Tentukan rentang & terapkan')}
         </span>
       </div>
     </div>
