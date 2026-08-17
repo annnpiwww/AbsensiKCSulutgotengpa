@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { AttendanceRecord, AttendanceStatus } from '../types/attendance';
 import { LOCATION_NAMES } from '../types/attendance';
 import {
@@ -10,6 +10,8 @@ import {
   Edit2,
   PlusCircle,
   Stethoscope,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 interface AttendanceLogPageProps {
@@ -30,6 +32,30 @@ const STATUS_BADGES: Record<string, { bg: string; text: string; label: string }>
   Off: { bg: 'bg-slate-100 border border-slate-300', text: 'text-slate-700 font-bold', label: 'Off' },
 };
 
+const formatPosition = (pos?: string) => {
+  if (!pos || pos === '-') return { text: '-', className: 'text-[var(--md-sys-color-on-surface-variant)]' };
+  
+  let text = pos.trim();
+  const upper = text.toUpperCase();
+
+  if (upper === 'ACT ADMIN' || upper.includes('ACT ADMIN')) {
+    text = 'Admin';
+  }
+
+  const upperDisplay = text.toUpperCase();
+  if (upperDisplay.includes('ADMIN')) {
+    return { text, className: 'text-blue-600 font-semibold' };
+  }
+  if (upperDisplay.includes('LEADER')) {
+    return { text, className: 'text-emerald-600 font-semibold' };
+  }
+  if (upperDisplay.includes('SPP') || upperDisplay.includes('SPL')) {
+    return { text, className: 'text-rose-600 font-semibold' };
+  }
+
+  return { text, className: 'text-[var(--md-sys-color-on-surface-variant)]' };
+};
+
 export const AttendanceLogPage: React.FC<AttendanceLogPageProps> = ({
   records,
   onEditRecord,
@@ -38,18 +64,43 @@ export const AttendanceLogPage: React.FC<AttendanceLogPageProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<AttendanceStatus | 'ALL'>('ALL');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 15;
+
+  const todayStr = useMemo(() => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }, []);
 
   const filteredRecords = useMemo(() => {
-    return records.filter((r) => {
+    const result = records.filter((r) => {
       const locName = LOCATION_NAMES[r.location] || r.location;
       const matchesSearch =
         r.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         r.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
         locName.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = selectedStatus === 'ALL' || r.status === selectedStatus;
-      return matchesSearch && matchesStatus;
+      const isNotFuture = !r.date || r.date <= todayStr;
+      return matchesSearch && matchesStatus && isNotFuture;
     });
-  }, [records, searchTerm, selectedStatus]);
+
+    // Urutkan tanggal terbaru di atas
+    return [...result].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  }, [records, searchTerm, selectedStatus, todayStr]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedStatus]);
+
+  const totalPages = Math.ceil(filteredRecords.length / ITEMS_PER_PAGE) || 1;
+
+  const paginatedRecords = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredRecords.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredRecords, currentPage]);
 
   const statuses: (AttendanceStatus | 'ALL')[] = ['ALL', 'Hadir', 'Izin', 'Sakit', 'Terlambat', 'Alpa', 'Cuti', 'Off'];
 
@@ -128,15 +179,16 @@ export const AttendanceLogPage: React.FC<AttendanceLogPageProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--md-sys-color-outline-variant)]">
-              {filteredRecords.length > 0 ? (
-                filteredRecords.map((r) => {
+              {paginatedRecords.length > 0 ? (
+                paginatedRecords.map((r) => {
                   const badge = STATUS_BADGES[r.status] || STATUS_BADGES['Hadir'];
+                  const posInfo = formatPosition(r.position);
                   return (
-                    <tr key={r.id} className="hover:bg-[var(--md-sys-color-surface-container-low)]">
-                      <td className="py-3 px-4 font-mono font-medium text-[var(--md-sys-color-on-surface)]">{r.date}</td>
+                    <tr key={r.id} className="hover:bg-[var(--md-sys-color-surface-container-low)] transition-colors">
+                      <td className="py-3 px-4 font-mono font-medium text-[var(--md-sys-color-on-surface)] whitespace-nowrap">{r.date}</td>
                       <td className="py-3 px-4 font-bold text-[var(--md-sys-color-on-surface)]">{r.name}</td>
                       <td className="py-3 px-4 font-mono text-[var(--md-sys-color-on-surface-variant)]">{r.employeeId}</td>
-                      <td className="py-3 px-4 text-[var(--md-sys-color-on-surface-variant)]">{r.position || '-'}</td>
+                      <td className={`py-3 px-4 ${posInfo.className}`}>{posInfo.text}</td>
                       <td className="py-3 px-4 font-medium text-[var(--md-sys-color-on-surface)]">{LOCATION_NAMES[r.location] || r.location}</td>
                       <td className="py-3 px-4">
                         <span className={`inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] ${badge.bg} ${badge.text}`}>
@@ -168,9 +220,33 @@ export const AttendanceLogPage: React.FC<AttendanceLogPageProps> = ({
           </table>
         </div>
 
-        {/* Footer info */}
-        <div className="p-3.5 border-t border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container-low)] text-xs text-[var(--md-sys-color-on-surface-variant)]">
-          Menampilkan <strong className="text-[var(--md-sys-color-primary)]">{filteredRecords.length}</strong> data absensi
+        {/* Footer Info & Pagination */}
+        <div className="p-4 border-t border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container-low)] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[var(--md-sys-color-on-surface-variant)]">
+          <div>
+            Menampilkan <strong className="text-[var(--md-sys-color-primary)] font-bold">{filteredRecords.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}</strong> - <strong className="text-[var(--md-sys-color-primary)] font-bold">{Math.min(currentPage * ITEMS_PER_PAGE, filteredRecords.length)}</strong> dari <strong className="text-[var(--md-sys-color-primary)] font-bold">{filteredRecords.length}</strong> data absensi (15 data per halaman)
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              className="px-3 py-1.5 rounded-full border border-[var(--md-sys-color-outline-variant)] text-xs font-semibold text-[var(--md-sys-color-primary)] hover:bg-[var(--md-sys-color-primary-container)] disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1 cursor-pointer"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span>Sebelumnya</span>
+            </button>
+            <span className="font-medium px-1">
+              Halaman <strong className="text-[var(--md-sys-color-primary)] font-bold">{currentPage}</strong> dari {totalPages}
+            </span>
+            <button
+              disabled={currentPage === totalPages || filteredRecords.length === 0}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              className="px-3 py-1.5 rounded-full border border-[var(--md-sys-color-outline-variant)] text-xs font-semibold text-[var(--md-sys-color-primary)] hover:bg-[var(--md-sys-color-primary-container)] disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1 cursor-pointer"
+            >
+              <span>Selanjutnya</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
     </div>

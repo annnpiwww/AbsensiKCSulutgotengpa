@@ -74,12 +74,28 @@ const STATUS_BADGES: Record<AttendanceStatus, { bg: string; text: string; dot: s
   },
 };
 
-const getPositionColor = (position: string = '') => {
-  const posUpper = position.toUpperCase();
-  if (posUpper.includes('LEADER')) return 'text-emerald-700 font-semibold';
-  if (posUpper.includes('ADMIN')) return 'text-blue-700 font-semibold';
-  if (posUpper.includes('SPP') || posUpper.includes('SPL')) return 'text-rose-700 font-semibold';
-  return 'text-[var(--md-sys-color-on-surface-variant)]';
+const formatPosition = (pos?: string) => {
+  if (!pos || pos === '-') return { text: '-', className: 'text-[var(--md-sys-color-on-surface-variant)]' };
+  
+  let text = pos.trim();
+  const upper = text.toUpperCase();
+
+  if (upper === 'ACT ADMIN' || upper.includes('ACT ADMIN')) {
+    text = 'Admin';
+  }
+
+  const upperDisplay = text.toUpperCase();
+  if (upperDisplay.includes('ADMIN')) {
+    return { text, className: 'text-blue-600 font-semibold' };
+  }
+  if (upperDisplay.includes('LEADER')) {
+    return { text, className: 'text-emerald-600 font-semibold' };
+  }
+  if (upperDisplay.includes('SPP') || upperDisplay.includes('SPL')) {
+    return { text, className: 'text-rose-600 font-semibold' };
+  }
+
+  return { text, className: 'text-[var(--md-sys-color-on-surface-variant)]' };
 };
 
 export const AttendanceTable: React.FC<AttendanceTableProps> = ({
@@ -222,8 +238,8 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
                       <div className="font-bold text-[var(--md-sys-color-on-surface)]">{r.name}</div>
                       <div className="text-[10px] text-[var(--md-sys-color-on-surface-variant)] font-mono">{r.employeeId}</div>
                     </td>
-                    <td className={`py-3 px-4 ${getPositionColor(r.position)}`}>
-                      {r.position || '-'}
+                    <td className={`py-3 px-4 ${formatPosition(r.position).className}`}>
+                      {formatPosition(r.position).text}
                     </td>
                     <td className="py-3 px-4 font-medium text-[var(--md-sys-color-on-surface)]">
                       {LOCATION_NAMES[r.location] || r.location}

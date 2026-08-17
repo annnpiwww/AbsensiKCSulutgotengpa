@@ -187,9 +187,14 @@ export function App() {
 
   // Filter records by both Location & Date Range
   const filteredRecords = useMemo(() => {
+    const todayStr = new Date().toISOString().split('T')[0];
     return records.filter((r) => {
       // Location Filter
       if (selectedLocation !== 'ALL' && r.location !== selectedLocation) {
+        return false;
+      }
+      // Cap future dates if not explicitly searching future
+      if (!endDate && r.date && r.date > todayStr) {
         return false;
       }
       // Date Filter

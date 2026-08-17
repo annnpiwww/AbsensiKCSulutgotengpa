@@ -190,15 +190,6 @@ export const ModernLogin: React.FC<ModernLoginProps> = ({ onLogin }) => {
               </div>
             )}
 
-            {/* User Preview Card */}
-            <div className="p-4 rounded-xl bg-gradient-to-br from-slate-50 to-blue-50/50 border border-slate-200">
-              <div className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1.5">
-                Akun Preview
-              </div>
-              <div className="text-sm font-bold text-slate-900 mb-0.5">{name}</div>
-              <div className="text-xs text-slate-500">{email}</div>
-            </div>
-
             {/* Google Sign In Button */}
             <button
               type="submit"
@@ -249,7 +240,7 @@ export const ModernLogin: React.FC<ModernLoginProps> = ({ onLogin }) => {
         {/* Additional Info */}
         <div className="mt-6 text-center text-xs text-slate-500 space-y-1">
           <p>Monitoring kehadiran Cabang KC Sulutgotengpa secara realtime</p>
-          <p className="text-slate-400">Manado • Gorontalo • Palu • Papua • dan lainnya</p>
+          <p className="text-slate-400">Manado • Gorontalo • Palu • Poso • Papua • dan lainnya</p>
         </div>
       </div>
 
