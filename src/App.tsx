@@ -306,14 +306,14 @@ export function App() {
                 <span>/</span>
                 <span className="text-[var(--md-sys-color-on-surface-variant)] font-bold">
                   {currentPage === 'dashboard' && 'Beranda Utama'}
-                  {currentPage === 'logs' && 'Log Absensi Detail'}
+                  {currentPage === 'logs' && 'Riwayat Absensi'}
                   {currentPage === 'analytics' && 'Bandingkan Cabang'}
                 </span>
               </div>
               <h1 className="text-base font-extrabold text-[var(--md-sys-color-on-surface)] tracking-tight leading-tight">
-                {currentPage === 'dashboard' && 'Monitoring Kehadiran Realtime'}
-                {currentPage === 'logs' && 'Log Riwayat Absensi Karyawan'}
-                {currentPage === 'analytics' && 'Analisis & Perbandingan Kantor Cabang'}
+                {currentPage === 'dashboard' && 'Ringkasan Absensi Hari Ini'}
+                {currentPage === 'logs' && 'Daftar Absensi Karyawan'}
+                {currentPage === 'analytics' && 'Perbandingan Kehadiran Cabang'}
               </h1>
             </div>
           </div>

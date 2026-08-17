@@ -49,7 +49,7 @@ export const KpiSummaryCards: React.FC<KpiSummaryCardsProps> = ({ records, selec
         <div className="bg-[var(--md-sys-color-surface-container-lowest)] p-5 rounded-2xl border border-[var(--md-sys-color-outline-variant)] shadow-xs m3-card-hover">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]">
-              Total Log Presensi
+              Total Catatan Absensi
             </span>
             <div className="p-2.5 rounded-2xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]">
               <Users className="w-5 h-5 text-[var(--md-sys-color-primary)]" />
@@ -60,7 +60,7 @@ export const KpiSummaryCards: React.FC<KpiSummaryCardsProps> = ({ records, selec
               {totalLogs}
             </span>
             <span className="text-xs font-medium text-[var(--md-sys-color-on-surface-variant)]">
-              Entri Terdata
+              Catatan
             </span>
           </div>
           <div className="mt-3 w-full h-1.5 bg-[var(--md-sys-color-surface-container-highest)] rounded-full overflow-hidden">

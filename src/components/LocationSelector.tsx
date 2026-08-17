@@ -52,12 +52,12 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
           </div>
           <div>
             <h4 className="text-xs font-bold text-[var(--md-sys-color-on-surface)]">
-              Lokasi Kerja & Kantor Cabang
+              Pilih Kantor Cabang
             </h4>
             <p className="text-[11px] text-[var(--md-sys-color-on-surface-variant)]">
               {isSuperuser
-                ? 'Mode Admin/Superuser: Akses seluruh kantor cabang'
-                : `Terunci pada lokasi penugasan: ${session.assignedLocation || 'Utama'}`}
+                ? 'Mode Admin: Semua cabang'
+                : `Lokasi saat ini: ${session.assignedLocation || 'Utama'}`}
             </p>
           </div>
         </div>

@@ -75,10 +75,10 @@ export const LocationAnalyticsPage: React.FC<LocationAnalyticsPageProps> = ({ re
         <div>
           <h2 className="text-lg font-extrabold text-[var(--md-sys-color-on-surface)] tracking-tight flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-[var(--md-sys-color-primary)]" />
-            <span>Analisis Kinerja Kehadiran Per Kantor Cabang</span>
+            <span>Analisis Kehadiran per Cabang</span>
           </h2>
           <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] mt-0.5">
-            Komparasi statistik disiplin presensi seluruh outlet KC Sulutgotengpa
+            Perbandingan kehadiran karyawan antar kantor cabang
           </p>
         </div>
       </div>
@@ -93,7 +93,7 @@ export const LocationAnalyticsPage: React.FC<LocationAnalyticsPageProps> = ({ re
             </div>
             <div>
               <span className="text-[11px] font-bold uppercase tracking-wider text-blue-800 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
-                Cabang Kedisiplinan Tertinggi
+                Cabang Kehadiran Terbaik
               </span>
               <h3 className="text-lg font-extrabold text-[var(--md-sys-color-on-surface)] mt-1">
                 {highestBranch.code} <span className="text-xs text-[var(--md-sys-color-on-surface-variant)] font-normal">({LOCATION_FULL_NAMES[highestBranch.code] || highestBranch.code})</span>
@@ -113,7 +113,7 @@ export const LocationAnalyticsPage: React.FC<LocationAnalyticsPageProps> = ({ re
             </div>
             <div>
               <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--md-sys-color-error)] bg-[var(--md-sys-color-error-container)] px-2.5 py-0.5 rounded-full border border-rose-200">
-                Perlu Perhatian HRD
+                Cabang Perlu Perhatian
               </span>
               <h3 className="text-lg font-extrabold text-[var(--md-sys-color-on-surface)] mt-1">
                 {lowestBranch.code} <span className="text-xs text-[var(--md-sys-color-on-surface-variant)] font-normal">({LOCATION_FULL_NAMES[lowestBranch.code] || lowestBranch.code})</span>
@@ -130,7 +130,7 @@ export const LocationAnalyticsPage: React.FC<LocationAnalyticsPageProps> = ({ re
       <div className="bg-[var(--md-sys-color-surface-container-lowest)] rounded-2xl border border-[var(--md-sys-color-outline-variant)] shadow-xs overflow-hidden m3-card-hover">
         <div className="p-4 bg-[var(--md-sys-color-surface-container-low)] border-b border-[var(--md-sys-color-outline-variant)]">
           <h3 className="font-bold text-sm text-[var(--md-sys-color-on-surface)]">
-            Peringkat Kehadiran & Rekapitulasi Seluruh Outlet (Singkatan Kode Lokasi)
+            Daftar Ringkasan Kehadiran per Cabang
           </h3>
         </div>
 

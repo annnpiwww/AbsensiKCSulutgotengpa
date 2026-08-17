@@ -32,11 +32,11 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
   const presets: { key: DateFilterPreset; label: string }[] = [
     { key: 'ALL', label: 'Semua Data' },
-    { key: 'MONTHLY_1_25', label: 'Periode 1 - 25' },
+    { key: 'MONTHLY_1_25', label: 'Tanggal 1 - 25' },
     { key: 'TODAY', label: 'Hari Ini' },
     { key: 'THIS_MONTH', label: 'Bulan Ini' },
     { key: 'CUSTOM_SINGLE', label: 'Pilih Tanggal' },
-    { key: 'CUSTOM', label: 'Rentang Kustom' },
+    { key: 'CUSTOM', label: 'Atur Tanggal Sendiri' },
   ];
 
   const handleApplyCustom = () => {
@@ -61,10 +61,10 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
           </div>
           <div>
             <h4 className="text-xs font-bold text-[var(--md-sys-color-on-surface)]">
-              Filter Rentang Waktu Presensi
+              Filter Tanggal Absensi
             </h4>
             <p className="text-[11px] text-[var(--md-sys-color-on-surface-variant)]">
-              Pilih preset periode atau tanggal kustom
+              Pilih tanggal atau rentang waktu yang ingin ditampilkan
             </p>
           </div>
         </div>

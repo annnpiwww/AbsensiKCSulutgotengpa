@@ -59,10 +59,10 @@ export const AttendanceLogPage: React.FC<AttendanceLogPageProps> = ({
       <div className="bg-[var(--md-sys-color-surface-container-lowest)] p-5 rounded-2xl border border-[var(--md-sys-color-outline-variant)] shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-bold text-[var(--md-sys-color-on-surface)] tracking-tight">
-            Log Riwayat Absensi Karyawan
+            Riwayat Absensi Karyawan
           </h2>
           <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] mt-0.5">
-            Merekap seluruh catatan kehadiran karyawan antar lokasi kantor
+            Daftar catatan kehadiran karyawan di semua kantor cabang
           </p>
         </div>
 
@@ -72,7 +72,7 @@ export const AttendanceLogPage: React.FC<AttendanceLogPageProps> = ({
             className="m3-btn-filled text-xs py-2.5 px-5"
           >
             <PlusCircle className="w-4 h-4 text-[var(--md-sys-color-on-primary)]" />
-            <span>Tambah Catatan Presensi</span>
+            <span>Tambah Data Absensi</span>
           </button>
         )}
       </div>
@@ -170,7 +170,7 @@ export const AttendanceLogPage: React.FC<AttendanceLogPageProps> = ({
 
         {/* Footer info */}
         <div className="p-3.5 border-t border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container-low)] text-xs text-[var(--md-sys-color-on-surface-variant)]">
-          Menampilkan <strong className="text-[var(--md-sys-color-primary)]">{filteredRecords.length}</strong> entri terkualifikasi
+          Menampilkan <strong className="text-[var(--md-sys-color-primary)]">{filteredRecords.length}</strong> data absensi
         </div>
       </div>
     </div>

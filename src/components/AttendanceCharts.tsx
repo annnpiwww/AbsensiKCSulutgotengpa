@@ -81,10 +81,10 @@ export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({ records }) =
       {/* Chart 1: Donut Distribution (M3 Surface Container Lowest) */}
       <div className="bg-[var(--md-sys-color-surface-container-lowest)] p-5 rounded-2xl border border-[var(--md-sys-color-outline-variant)] shadow-xs">
         <h3 className="font-bold text-[var(--md-sys-color-on-surface)] text-sm tracking-tight mb-1">
-          Distribusi Status Kehadiran
+          Ringkasan Status Kehadiran
         </h3>
         <p className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] mb-4">
-          Proporsi status presensi dalam periode terfilter
+          Perbandingan status hadir, izin, sakit, dan alpa
         </p>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
@@ -186,10 +186,10 @@ export const AttendanceCharts: React.FC<AttendanceChartsProps> = ({ records }) =
       {/* Chart 3: Perbandingan Per Kantor Cabang Bar Chart */}
       <div className="bg-[var(--md-sys-color-surface-container-lowest)] p-5 rounded-2xl border border-[var(--md-sys-color-outline-variant)] shadow-xs lg:col-span-3">
         <h3 className="font-bold text-[var(--md-sys-color-on-surface)] text-sm tracking-tight mb-1">
-          Perbandingan Kehadiran Per Kantor Cabang (Sulutgo)
+          Grafik Kehadiran per Kantor Cabang
         </h3>
         <p className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] mb-4">
-          Breakdown status presensi per lokasi office
+          Rincian status absensi di setiap cabang
         </p>
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
